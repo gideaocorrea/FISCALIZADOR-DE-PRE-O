@@ -60,7 +60,7 @@
 
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 15px;
             align-items: end;
         }
@@ -194,6 +194,29 @@
             font-size: 16px;
         }
 
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .modal h3 { margin-bottom: 20px; color: #1e3c72; }
+        .modal .form-group { margin-bottom: 15px; }
+        .modal .btn-group { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
         @media (max-width: 768px) {
             .container { padding: 15px; }
             .form-grid { grid-template-columns: 1fr; }
@@ -256,6 +279,14 @@
                 <input type="number" id="precoPraticadoAtualizar" step="0.001" placeholder="0,000">
             </div>
             <div class="form-group">
+                <label>Data (opcional)</label>
+                <input type="date" id="dataAtualizar">
+            </div>
+            <div class="form-group">
+                <label>Hora (opcional)</label>
+                <input type="time" id="horaAtualizar">
+            </div>
+            <div class="form-group" style="grid-column: span 1;">
                 <button class="btn btn-success" onclick="salvarPreco()" style="width:100%;">💾 Salvar Preço</button>
             </div>
         </div>
@@ -330,6 +361,26 @@
 
 </div>
 
+<!-- Modal de Edição -->
+<div class="modal-overlay" id="modalEdicao">
+    <div class="modal">
+        <h3>✏️ Editar Data/Hora</h3>
+        <div class="form-group">
+            <label>Data</label>
+            <input type="date" id="modalData">
+        </div>
+        <div class="form-group">
+            <label>Hora</label>
+            <input type="time" id="modalHora">
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="salvarEdicao()">💾 Salvar</button>
+        </div>
+        <div id="msgModal" style="margin-top:10px;"></div>
+    </div>
+</div>
+
 <script type="importmap">
 {
   "imports": {
@@ -382,6 +433,7 @@ statusEl.style.color = '#155724';
 // ==================== VARIÁVEIS GLOBAIS ====================
 let dados = [];
 let regras = { regra1: 0.180, regra2: 0.070 };
+let idEditando = null;
 
 // ==================== FUNÇÕES DE CÁLCULO ====================
 function calcularRegras(precoMedio, precoMinimo, regra1, regra2) {
@@ -443,7 +495,6 @@ function carregarRegrasFirestore() {
             document.getElementById('regra1Valor').value = regras.regra1;
             document.getElementById('regra2Valor').value = regras.regra2;
         } else {
-            // Criar documento padrão
             setDoc(docRef, { regra1: 0.180, regra2: 0.070 });
         }
     }).catch(error => {
@@ -463,7 +514,6 @@ function carregarDadosFirestore() {
         snapshot.forEach((doc) => {
             dados.push({ id: doc.id, ...doc.data() });
         });
-        // Atualizar a data atual
         document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR');
         renderizarDashboard();
         renderizarHistorico();
@@ -483,10 +533,12 @@ window.salvarPreco = async function() {
     const precoMedio = parseFloat(document.getElementById('precoMedioAtualizar').value);
     const precoMinimo = parseFloat(document.getElementById('precoMinimoAtualizar').value);
     const precoPraticado = parseFloat(document.getElementById('precoPraticadoAtualizar').value);
+    const dataInput = document.getElementById('dataAtualizar').value;
+    const horaInput = document.getElementById('horaAtualizar').value;
     const msgEl = document.getElementById('msgAtualizar');
 
     if (isNaN(precoMedio) || isNaN(precoMinimo) || isNaN(precoPraticado)) {
-        msgEl.innerHTML = '<span style="color:#dc3545;">Preencha todos os campos corretamente.</span>';
+        msgEl.innerHTML = '<span style="color:#dc3545;">Preencha todos os campos de preço corretamente.</span>';
         return;
     }
     if (precoMedio <= 0 || precoMinimo <= 0 || precoPraticado <= 0) {
@@ -498,13 +550,17 @@ window.salvarPreco = async function() {
         return;
     }
 
+    // Data e hora: se o usuário não preencher, usa a atual
+    let data = dataInput || new Date().toISOString().slice(0,10);
+    let hora = horaInput || new Date().toLocaleTimeString('pt-BR');
+
     const { regra1, regra2, regra3, faixaMin, faixaMax } = calcularRegras(precoMedio, precoMinimo, regras.regra1, regras.regra2);
     const status = calcularStatus(precoPraticado, faixaMin, faixaMax);
     const prox = regraMaisProxima(precoPraticado, regra1, regra2, regra3);
 
     const registro = {
-        data: new Date().toISOString().slice(0,10),
-        hora: new Date().toLocaleTimeString('pt-BR'),
+        data: data,
+        hora: hora,
         combustivel: combustivel,
         precoMedio: precoMedio,
         precoMinimo: precoMinimo,
@@ -525,6 +581,8 @@ window.salvarPreco = async function() {
         document.getElementById('precoMedioAtualizar').value = '';
         document.getElementById('precoMinimoAtualizar').value = '';
         document.getElementById('precoPraticadoAtualizar').value = '';
+        document.getElementById('dataAtualizar').value = '';
+        document.getElementById('horaAtualizar').value = '';
 
         // Pré-preencher com os últimos valores desse combustível
         const ultimo = dados.filter(d => d.combustivel === combustivel).slice(-1)[0];
@@ -546,6 +604,47 @@ window.deletarPreco = async function(id) {
     } catch (error) {
         console.error('Erro ao deletar:', error);
         alert('Erro ao excluir registro.');
+    }
+};
+
+// ==================== MODAL DE EDIÇÃO ====================
+window.abrirModalEdicao = function(id) {
+    const item = dados.find(d => d.id === id);
+    if (!item) return;
+    idEditando = id;
+    document.getElementById('modalData').value = item.data;
+    document.getElementById('modalHora').value = item.hora;
+    document.getElementById('msgModal').innerHTML = '';
+    document.getElementById('modalEdicao').classList.add('active');
+};
+
+window.fecharModal = function() {
+    document.getElementById('modalEdicao').classList.remove('active');
+    idEditando = null;
+};
+
+window.salvarEdicao = async function() {
+    if (!idEditando) return;
+    const novaData = document.getElementById('modalData').value;
+    const novaHora = document.getElementById('modalHora').value;
+    const msgEl = document.getElementById('msgModal');
+
+    if (!novaData || !novaHora) {
+        msgEl.innerHTML = '<span style="color:#dc3545;">Preencha data e hora.</span>';
+        return;
+    }
+
+    try {
+        const docRef = doc(db, 'precos', idEditando);
+        await updateDoc(docRef, {
+            data: novaData,
+            hora: novaHora
+        });
+        msgEl.innerHTML = '<span style="color:#28a745;">✅ Data e hora atualizadas com sucesso!</span>';
+        fecharModal();
+    } catch (error) {
+        console.error('Erro ao atualizar:', error);
+        msgEl.innerHTML = `<span style="color:#dc3545;">❌ Erro ao atualizar: ${error.message}</span>`;
     }
 };
 
@@ -645,7 +744,8 @@ window.renderizarHistorico = function() {
                 <td><span class="status-badge ${statusInfo.class}">${statusInfo.text}</span></td>
                 <td>Regra ${item.regraMaisProxima}: ${sinal}${item.diferencaCentavos.toFixed(1)} c</td>
                 <td>
-                    <button class="btn btn-danger btn-sm" onclick="deletarPreco('${item.id}')">🗑️</button>
+                    <button class="btn btn-info btn-sm" onclick="abrirModalEdicao('${item.id}')" title="Editar data/hora">✏️</button>
+                    <button class="btn btn-danger btn-sm" onclick="deletarPreco('${item.id}')" title="Excluir">🗑️</button>
                 </td>
             </tr>
         `;
@@ -673,7 +773,6 @@ window.salvarRegras = async function() {
         regras.regra1 = r1;
         regras.regra2 = r2;
         msgEl.innerHTML = '<span style="color:#28a745;">✅ Regras atualizadas com sucesso!</span>';
-        // Recarregar dados para recalcular com novas regras
         carregarDadosFirestore();
     } catch (error) {
         msgEl.innerHTML = `<span style="color:#dc3545;">❌ Erro ao salvar: ${error.message}</span>`;
@@ -707,11 +806,9 @@ document.getElementById('combustivelAtualizar').addEventListener('change', funct
 // ==================== INICIALIZAÇÃO ====================
 document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR');
 
-// Carregar regras e dados
 carregarRegrasFirestore();
 carregarDadosFirestore();
 
-// Trigger inicial para preencher o primeiro combustível
 setTimeout(() => {
     const event = new Event('change');
     document.getElementById('combustivelAtualizar').dispatchEvent(event);
