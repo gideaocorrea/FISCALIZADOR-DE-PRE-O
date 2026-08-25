@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fiscalizador de Preços - Posto</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body {
+            background: #1e3c72;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 1400px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        h1 { color: #1e3c72; display: flex; align-items: center; gap: 10px; }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0 30px 0;
+            border-bottom: 2px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            font-weight: 600;
+            cursor: pointer;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: 0.3s;
+            font-size: 16px;
+        }
+        .tab-btn.active {
+            color: #1e3c72;
+            border-bottom-color: #1e3c72;
+            background: #f0f4ff;
+            border-radius: 10px 10px 0 0;
+        }
+        .tab-btn:hover { background: #f0f4ff; border-radius: 10px 10px 0 0; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            align-items: end;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        .form-group input, .form-group select {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42,82,152,0.1);
+        }
+        .btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 14px;
+        }
+        .btn-primary { background: #2a5298; color: white; }
+        .btn-primary:hover { background: #1e3c72; transform: translateY(-2px); }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; transform: translateY(-2px); }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; transform: translateY(-2px); }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-warning:hover { background: #e0a800; transform: translateY(-2px); }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-info:hover { background: #138496; transform: translateY(-2px); }
+        .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+        .table-responsive { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead { background: #1e3c72; color: white; }
+        th { padding: 12px 8px; text-align: left; font-weight: 600; white-space: nowrap; }
+        td { padding: 10px 8px; border-bottom: 1px solid #e0e0e0; }
+        tr:hover { background: #f7fafc; }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+            white-space: nowrap;
+        }
+        .status-ok { background: #d4edda; color: #155724; }
+        .status-warning { background: #fff3cd; color: #856404; }
+        .status-error { background: #f8d7da; color: #721c24; }
+        .status-excellent { background: #cce5ff; color: #004085; }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .summary-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .summary-card h3 { font-size: 12px; color: #666; margin-bottom: 5px; text-transform: uppercase; }
+        .summary-card .number { font-size: 24px; font-weight: bold; color: #333; }
+        .summary-card .number.ok { color: #28a745; }
+        .summary-card .number.warning { color: #ffc107; }
+        .summary-card .number.error { color: #dc3545; }
+        .summary-card .number.excellent { color: #17a2b8; }
+
+        .filter-section {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .filter-section select, .filter-section input {
+            padding: 8px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .faixa-aceitavel { background: #e8f5e9; padding: 2px 10px; border-radius: 12px; font-weight: 600; color: #2e7d32; font-size: 11px; }
+        .faixa-abaixo { background: #e3f2fd; padding: 2px 10px; border-radius: 12px; font-weight: 600; color: #0d47a1; font-size: 11px; }
+        .faixa-acima { background: #fff3e0; padding: 2px 10px; border-radius: 12px; font-weight: 600; color: #e65100; font-size: 11px; }
+
+        .card-dashboard {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid #2a5298;
+        }
+        .card-dashboard .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+        }
+        .card-dashboard .item {
+            flex: 1;
+            min-width: 150px;
+        }
+        .valor-grande { font-size: 28px; font-weight: bold; }
+        .semaforo { display: inline-block; width: 20px; height: 20px; border-radius: 50%; margin-right: 8px; }
+        .semaforo.verde { background: #28a745; }
+        .semaforo.amarelo { background: #ffc107; }
+        .semaforo.vermelho { background: #dc3545; }
+        .semaforo.azul { background: #17a2b8; }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .tabs { flex-direction: column; }
+            .tab-btn { width: 100%; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>⛽ Fiscalizador de Preços</h1>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <span style="background:#f0f4ff; padding:8px 15px; border-radius:10px; font-size:14px; color:#1e3c72;">
+                📅 <span id="dataAtual"></span>
+            </span>
+            <span id="statusConexao" style="background:#fff3cd; padding:4px 12px; border-radius:20px; font-size:12px; color:#856404;">🔄 Conectando...</span>
+        </div>
+    </div>
+
+    <!-- Abas -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="dashboard">📊 Dashboard</button>
+        <button class="tab-btn" data-tab="atualizar">📝 Atualizar</button>
+        <button class="tab-btn" data-tab="historico">📋 Histórico</button>
+        <button class="tab-btn" data-tab="regras">⚙️ Regras</button>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="tab-content active">
+        <h3 style="margin-bottom:15px;">Situação Atual dos Preços</h3>
+        <div id="dashboardCards"><div class="loading">⏳ Carregando dados...</div></div>
+        <div id="dashboardResumo" class="summary"></div>
+    </div>
+
+    <!-- Atualizar -->
+    <div id="atualizar" class="tab-content">
+        <h3 style="margin-bottom:15px;">Inserir novo preço da distribuidora</h3>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Combustível</label>
+                <select id="combustivelAtualizar">
+                    <option value="Gasolina Comum">Gasolina Comum</option>
+                    <option value="Gasolina Aditivada">Gasolina Aditivada</option>
+                    <option value="Etanol">Etanol</option>
+                    <option value="Diesel S-10">Diesel S-10</option>
+                    <option value="Diesel Comum">Diesel Comum</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Preço Médio SEFAZ (R$)</label>
+                <input type="number" id="precoMedioAtualizar" step="0.001" placeholder="0,000">
+            </div>
+            <div class="form-group">
+                <label>Preço Mínimo SEFAZ (R$)</label>
+                <input type="number" id="precoMinimoAtualizar" step="0.001" placeholder="0,000">
+            </div>
+            <div class="form-group">
+                <label>Preço Praticado (R$)</label>
+                <input type="number" id="precoPraticadoAtualizar" step="0.001" placeholder="0,000">
+            </div>
+            <div class="form-group">
+                <button class="btn btn-success" onclick="salvarPreco()" style="width:100%;">💾 Salvar Preço</button>
+            </div>
+        </div>
+        <div id="msgAtualizar" style="margin-top:15px;"></div>
+    </div>
+
+    <!-- Histórico -->
+    <div id="historico" class="tab-content">
+        <h3 style="margin-bottom:15px;">Histórico de Preços</h3>
+        <div class="filter-section">
+            <label>Combustível:</label>
+            <select id="filtroCombustivel" onchange="renderizarHistorico()">
+                <option value="todos">Todos</option>
+                <option value="Gasolina Comum">Gasolina Comum</option>
+                <option value="Gasolina Aditivada">Gasolina Aditivada</option>
+                <option value="Etanol">Etanol</option>
+                <option value="Diesel S-10">Diesel S-10</option>
+                <option value="Diesel Comum">Diesel Comum</option>
+            </select>
+            <label>Período:</label>
+            <select id="filtroPeriodo" onchange="renderizarHistorico()">
+                <option value="todos">Todos</option>
+                <option value="7">Últimos 7 dias</option>
+                <option value="30">Últimos 30 dias</option>
+                <option value="90">Últimos 90 dias</option>
+            </select>
+            <button class="btn btn-warning" onclick="limparFiltrosHistorico()">🔄 Limpar Filtros</button>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Combustível</th>
+                        <th>Preço Médio</th>
+                        <th>Preço Mínimo</th>
+                        <th>Regra 1</th>
+                        <th>Regra 2</th>
+                        <th>Regra 3</th>
+                        <th>Faixa Aceitável</th>
+                        <th>Preço Praticado</th>
+                        <th>Status</th>
+                        <th>Regra mais próxima</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaHistorico">
+                    <tr><td colspan="12" class="loading">⏳ Carregando histórico...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Regras -->
+    <div id="regras" class="tab-content">
+        <h3 style="margin-bottom:15px;">Configuração das Regras de Cálculo</h3>
+        <div class="form-grid" style="max-width:500px;">
+            <div class="form-group">
+                <label>Valor da Regra 1 (Preço Médio - X)</label>
+                <input type="number" id="regra1Valor" step="0.001" value="0.180">
+            </div>
+            <div class="form-group">
+                <label>Valor da Regra 2 (Preço Mínimo + Y)</label>
+                <input type="number" id="regra2Valor" step="0.001" value="0.070">
+            </div>
+            <div class="form-group" style="grid-column: span 1;">
+                <button class="btn btn-primary" onclick="salvarRegras()">💾 Salvar Regras</button>
+            </div>
+        </div>
+        <div id="msgRegras" style="margin-top:15px;"></div>
+    </div>
+
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "firebase/app": "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js",
+    "firebase/firestore": "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js"
+  }
+}
+</script>
+
+<script type="module">
+import { initializeApp } from "firebase/app";
+import { 
+    getFirestore, 
+    collection, 
+    addDoc, 
+    getDocs, 
+    query, 
+    orderBy, 
+    where, 
+    onSnapshot,
+    deleteDoc,
+    doc,
+    updateDoc,
+    getDoc,
+    setDoc
+} from "firebase/firestore";
+
+// ==================== FIREBASE CONFIG ====================
+const firebaseConfig = {
+    apiKey: "AIzaSyAyAtL3v2jSnUd4gGAU0zWXhqI84kngsio",
+    authDomain: "fiscalizador-preco.firebaseapp.com",
+    databaseURL: "https://fiscalizador-preco-default-rtdb.firebaseio.com",
+    projectId: "fiscalizador-preco",
+    storageBucket: "fiscalizador-preco.firebasestorage.app",
+    messagingSenderId: "968106554702",
+    appId: "1:968106554702:web:e812a8e07e2aac33eb5a1f",
+    measurementId: "G-82TSJJ2V9P"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Status de conexão
+const statusEl = document.getElementById('statusConexao');
+statusEl.textContent = '✅ Conectado ao Firestore';
+statusEl.style.background = '#d4edda';
+statusEl.style.color = '#155724';
+
+// ==================== VARIÁVEIS GLOBAIS ====================
+let dados = [];
+let regras = { regra1: 0.180, regra2: 0.070 };
+
+// ==================== FUNÇÕES DE CÁLCULO ====================
+function calcularRegras(precoMedio, precoMinimo, regra1, regra2) {
+    const r1 = precoMedio - regra1;
+    const r2 = precoMinimo + regra2;
+    const r3 = (precoMinimo + precoMedio) / 2;
+    const valores = [r1, r2, r3];
+    const menor = Math.min(...valores);
+    const maior = Math.max(...valores);
+    return { regra1: r1, regra2: r2, regra3: r3, faixaMin: menor, faixaMax: maior };
+}
+
+function calcularStatus(precoPraticado, faixaMin, faixaMax) {
+    if (precoPraticado < faixaMin) return 'excellent';
+    if (precoPraticado <= faixaMax) return 'ok';
+    if (precoPraticado <= faixaMax + 0.05) return 'warning';
+    return 'error';
+}
+
+function getStatusInfo(status) {
+    const map = {
+        'excellent': { text: '📊 Abaixo da Faixa', class: 'status-excellent' },
+        'ok': { text: '✅ Dentro da Faixa', class: 'status-ok' },
+        'warning': { text: '⚠️ Acima da Faixa', class: 'status-warning' },
+        'error': { text: '❌ Muito Acima', class: 'status-error' }
+    };
+    return map[status] || map['ok'];
+}
+
+function regraMaisProxima(precoPraticado, regra1, regra2, regra3) {
+    const regrasLista = [
+        { nome: '1', valor: regra1 },
+        { nome: '2', valor: regra2 },
+        { nome: '3', valor: regra3 }
+    ];
+    let maisProx = regrasLista[0];
+    let menorDist = Math.abs(precoPraticado - regrasLista[0].valor);
+    for (let i = 1; i < regrasLista.length; i++) {
+        const dist = Math.abs(precoPraticado - regrasLista[i].valor);
+        if (dist < menorDist) {
+            menorDist = dist;
+            maisProx = regrasLista[i];
+        }
+    }
+    const diferenca = precoPraticado - maisProx.valor;
+    return {
+        regra: maisProx.nome,
+        diferenca: diferenca,
+        centavos: diferenca * 100
+    };
+}
+
+// ==================== FIREBASE OPERATIONS ====================
+function carregarRegrasFirestore() {
+    const docRef = doc(db, 'config', 'regras');
+    getDoc(docRef).then((docSnap) => {
+        if (docSnap.exists()) {
+            regras = docSnap.data();
+            document.getElementById('regra1Valor').value = regras.regra1;
+            document.getElementById('regra2Valor').value = regras.regra2;
+        } else {
+            // Criar documento padrão
+            setDoc(docRef, { regra1: 0.180, regra2: 0.070 });
+        }
+    }).catch(error => {
+        console.error('Erro ao carregar regras:', error);
+    });
+}
+
+function salvarRegrasFirestore(regra1, regra2) {
+    const docRef = doc(db, 'config', 'regras');
+    return setDoc(docRef, { regra1, regra2 });
+}
+
+function carregarDadosFirestore() {
+    const q = query(collection(db, 'precos'), orderBy('data', 'desc'));
+    onSnapshot(q, (snapshot) => {
+        dados = [];
+        snapshot.forEach((doc) => {
+            dados.push({ id: doc.id, ...doc.data() });
+        });
+        // Atualizar a data atual
+        document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR');
+        renderizarDashboard();
+        renderizarHistorico();
+    }, (error) => {
+        console.error('Erro ao carregar dados:', error);
+        document.getElementById('dashboardCards').innerHTML = 
+            '<div class="loading" style="color:#dc3545;">❌ Erro ao conectar ao banco de dados. Verifique sua internet.</div>';
+        document.getElementById('statusConexao').textContent = '�️ Desconectado';
+        document.getElementById('statusConexao').style.background = '#f8d7da';
+        document.getElementById('statusConexao').style.color = '#721c24';
+    });
+}
+
+// ==================== SALVAR PREÇO ====================
+window.salvarPreco = async function() {
+    const combustivel = document.getElementById('combustivelAtualizar').value;
+    const precoMedio = parseFloat(document.getElementById('precoMedioAtualizar').value);
+    const precoMinimo = parseFloat(document.getElementById('precoMinimoAtualizar').value);
+    const precoPraticado = parseFloat(document.getElementById('precoPraticadoAtualizar').value);
+    const msgEl = document.getElementById('msgAtualizar');
+
+    if (isNaN(precoMedio) || isNaN(precoMinimo) || isNaN(precoPraticado)) {
+        msgEl.innerHTML = '<span style="color:#dc3545;">Preencha todos os campos corretamente.</span>';
+        return;
+    }
+    if (precoMedio <= 0 || precoMinimo <= 0 || precoPraticado <= 0) {
+        msgEl.innerHTML = '<span style="color:#dc3545;">Os preços devem ser maiores que zero.</span>';
+        return;
+    }
+    if (precoMinimo > precoMedio) {
+        msgEl.innerHTML = '<span style="color:#dc3545;">Preço mínimo não pode ser maior que o médio.</span>';
+        return;
+    }
+
+    const { regra1, regra2, regra3, faixaMin, faixaMax } = calcularRegras(precoMedio, precoMinimo, regras.regra1, regras.regra2);
+    const status = calcularStatus(precoPraticado, faixaMin, faixaMax);
+    const prox = regraMaisProxima(precoPraticado, regra1, regra2, regra3);
+
+    const registro = {
+        data: new Date().toISOString().slice(0,10),
+        hora: new Date().toLocaleTimeString('pt-BR'),
+        combustivel: combustivel,
+        precoMedio: precoMedio,
+        precoMinimo: precoMinimo,
+        precoPraticado: precoPraticado,
+        regra1: regra1,
+        regra2: regra2,
+        regra3: regra3,
+        faixaMin: faixaMin,
+        faixaMax: faixaMax,
+        status: status,
+        regraMaisProxima: prox.regra,
+        diferencaCentavos: prox.centavos
+    };
+
+    try {
+        await addDoc(collection(db, 'precos'), registro);
+        msgEl.innerHTML = `<span style="color:#28a745;">✅ Preço de ${combustivel} salvo com sucesso!</span>`;
+        document.getElementById('precoMedioAtualizar').value = '';
+        document.getElementById('precoMinimoAtualizar').value = '';
+        document.getElementById('precoPraticadoAtualizar').value = '';
+
+        // Pré-preencher com os últimos valores desse combustível
+        const ultimo = dados.filter(d => d.combustivel === combustivel).slice(-1)[0];
+        if (ultimo) {
+            document.getElementById('precoMedioAtualizar').value = ultimo.precoMedio;
+            document.getElementById('precoMinimoAtualizar').value = ultimo.precoMinimo;
+        }
+    } catch (error) {
+        console.error('Erro ao salvar:', error);
+        msgEl.innerHTML = `<span style="color:#dc3545;">❌ Erro ao salvar: ${error.message}</span>`;
+    }
+};
+
+// ==================== DELETAR PREÇO ====================
+window.deletarPreco = async function(id) {
+    if (!confirm('Tem certeza que deseja excluir este registro?')) return;
+    try {
+        await deleteDoc(doc(db, 'precos', id));
+    } catch (error) {
+        console.error('Erro ao deletar:', error);
+        alert('Erro ao excluir registro.');
+    }
+};
+
+// ==================== DASHBOARD ====================
+function renderizarDashboard() {
+    const container = document.getElementById('dashboardCards');
+    const resumo = document.getElementById('dashboardResumo');
+
+    const combustiveis = ['Gasolina Comum', 'Gasolina Aditivada', 'Etanol', 'Diesel S-10', 'Diesel Comum'];
+    let cards = '';
+    let totalOk = 0, totalWarning = 0, totalError = 0, totalExcellent = 0;
+
+    combustiveis.forEach(comb => {
+        const ultimo = dados.filter(d => d.combustivel === comb).slice(-1)[0];
+        if (!ultimo) {
+            cards += `
+                <div class="card-dashboard" style="border-left-color:#999;">
+                    <h4>${comb}</h4>
+                    <p style="color:#999;">Nenhum preço cadastrado ainda.</p>
+                </div>
+            `;
+            return;
+        }
+        const statusInfo = getStatusInfo(ultimo.status);
+        let semaforoClass = '';
+        if (ultimo.status === 'ok') semaforoClass = 'verde';
+        else if (ultimo.status === 'warning') semaforoClass = 'amarelo';
+        else if (ultimo.status === 'error') semaforoClass = 'vermelho';
+        else if (ultimo.status === 'excellent') semaforoClass = 'azul';
+
+        const sinal = ultimo.diferencaCentavos >= 0 ? '+' : '';
+        const borderColor = ultimo.status === 'ok' ? '#28a745' : ultimo.status === 'warning' ? '#ffc107' : ultimo.status === 'error' ? '#dc3545' : '#17a2b8';
+        cards += `
+            <div class="card-dashboard" style="border-left-color:${borderColor};">
+                <div class="row">
+                    <div class="item"><h4>${ultimo.combustivel}</h4></div>
+                    <div class="item"><span class="semaforo ${semaforoClass}"></span> <span class="valor-grande">R$ ${ultimo.precoPraticado.toFixed(3)}</span></div>
+                    <div class="item">Faixa: R$ ${ultimo.faixaMin.toFixed(3)} – R$ ${ultimo.faixaMax.toFixed(3)}</div>
+                    <div class="item"><span class="status-badge ${statusInfo.class}">${statusInfo.text}</span></div>
+                    <div class="item">Regra ${ultimo.regraMaisProxima}: ${sinal}${ultimo.diferencaCentavos.toFixed(1)} centavos</div>
+                    <div class="item" style="font-size:12px; color:#666;">Última atualização: ${ultimo.data} ${ultimo.hora}</div>
+                </div>
+            </div>
+        `;
+
+        if (ultimo.status === 'ok') totalOk++;
+        else if (ultimo.status === 'warning') totalWarning++;
+        else if (ultimo.status === 'error') totalError++;
+        else if (ultimo.status === 'excellent') totalExcellent++;
+    });
+
+    container.innerHTML = cards;
+
+    resumo.innerHTML = `
+        <div class="summary-card"><h3>✅ Dentro</h3><div class="number ok">${totalOk}</div></div>
+        <div class="summary-card"><h3>📊 Abaixo</h3><div class="number excellent">${totalExcellent}</div></div>
+        <div class="summary-card"><h3>⚠️ Acima</h3><div class="number warning">${totalWarning}</div></div>
+        <div class="summary-card"><h3>❌ Muito Acima</h3><div class="number error">${totalError}</div></div>
+    `;
+}
+
+// ==================== HISTÓRICO ====================
+window.renderizarHistorico = function() {
+    const tbody = document.getElementById('tabelaHistorico');
+    const filtroComb = document.getElementById('filtroCombustivel').value;
+    const filtroPeriodo = parseInt(document.getElementById('filtroPeriodo').value);
+
+    let filtrados = dados;
+    if (filtroComb !== 'todos') {
+        filtrados = filtrados.filter(d => d.combustivel === filtroComb);
+    }
+    if (!isNaN(filtroPeriodo)) {
+        const dataLimite = new Date();
+        dataLimite.setDate(dataLimite.getDate() - filtroPeriodo);
+        filtrados = filtrados.filter(d => new Date(d.data) >= dataLimite);
+    }
+
+    if (filtrados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:#999; padding:30px;">Nenhum registro encontrado.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = filtrados.slice().reverse().map(item => {
+        const statusInfo = getStatusInfo(item.status);
+        const sinal = item.diferencaCentavos >= 0 ? '+' : '';
+        return `
+            <tr>
+                <td>${item.data} ${item.hora}</td>
+                <td>${item.combustivel}</td>
+                <td>R$ ${item.precoMedio.toFixed(3)}</td>
+                <td>R$ ${item.precoMinimo.toFixed(3)}</td>
+                <td>R$ ${item.regra1.toFixed(3)}</td>
+                <td>R$ ${item.regra2.toFixed(3)}</td>
+                <td>R$ ${item.regra3.toFixed(3)}</td>
+                <td>R$ ${item.faixaMin.toFixed(3)} ⟷ R$ ${item.faixaMax.toFixed(3)}</td>
+                <td><strong>R$ ${item.precoPraticado.toFixed(3)}</strong></td>
+                <td><span class="status-badge ${statusInfo.class}">${statusInfo.text}</span></td>
+                <td>Regra ${item.regraMaisProxima}: ${sinal}${item.diferencaCentavos.toFixed(1)} c</td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="deletarPreco('${item.id}')">🗑️</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+};
+
+window.limparFiltrosHistorico = function() {
+    document.getElementById('filtroCombustivel').value = 'todos';
+    document.getElementById('filtroPeriodo').value = 'todos';
+    renderizarHistorico();
+};
+
+// ==================== REGRAS ====================
+window.salvarRegras = async function() {
+    const r1 = parseFloat(document.getElementById('regra1Valor').value);
+    const r2 = parseFloat(document.getElementById('regra2Valor').value);
+    const msgEl = document.getElementById('msgRegras');
+
+    if (isNaN(r1) || isNaN(r2) || r1 < 0 || r2 < 0) {
+        msgEl.innerHTML = '<span style="color:#dc3545;">Valores inválidos. Digite números positivos.</span>';
+        return;
+    }
+    try {
+        await salvarRegrasFirestore(r1, r2);
+        regras.regra1 = r1;
+        regras.regra2 = r2;
+        msgEl.innerHTML = '<span style="color:#28a745;">✅ Regras atualizadas com sucesso!</span>';
+        // Recarregar dados para recalcular com novas regras
+        carregarDadosFirestore();
+    } catch (error) {
+        msgEl.innerHTML = `<span style="color:#dc3545;">❌ Erro ao salvar: ${error.message}</span>`;
+    }
+};
+
+// ==================== ABAS ====================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById(this.dataset.tab).classList.add('active');
+        if (this.dataset.tab === 'dashboard') renderizarDashboard();
+        if (this.dataset.tab === 'historico') renderizarHistorico();
+    });
+});
+
+// ==================== PRÉ-PREENCHIMENTO ====================
+document.getElementById('combustivelAtualizar').addEventListener('change', function() {
+    const ultimo = dados.filter(d => d.combustivel === this.value).slice(-1)[0];
+    if (ultimo) {
+        document.getElementById('precoMedioAtualizar').value = ultimo.precoMedio;
+        document.getElementById('precoMinimoAtualizar').value = ultimo.precoMinimo;
+    } else {
+        document.getElementById('precoMedioAtualizar').value = '';
+        document.getElementById('precoMinimoAtualizar').value = '';
+    }
+});
+
+// ==================== INICIALIZAÇÃO ====================
+document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR');
+
+// Carregar regras e
