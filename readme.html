@@ -707,4 +707,16 @@ document.getElementById('combustivelAtualizar').addEventListener('change', funct
 // ==================== INICIALIZAÇÃO ====================
 document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR');
 
-// Carregar regras e
+// Carregar regras e dados
+carregarRegrasFirestore();
+carregarDadosFirestore();
+
+// Trigger inicial para preencher o primeiro combustível
+setTimeout(() => {
+    const event = new Event('change');
+    document.getElementById('combustivelAtualizar').dispatchEvent(event);
+}, 500);
+
+</script>
+</body>
+</html>
