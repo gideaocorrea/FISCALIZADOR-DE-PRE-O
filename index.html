@@ -1,384 +1,365 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fiscalizador de Preços - Posto</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body {
-            background: #1e3c72;
-            min-height: 100vh;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .container {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 1400px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-        h1 { color: #1e3c72; display: flex; align-items: center; gap: 10px; }
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin: 20px 0 30px 0;
-            border-bottom: 2px solid #e0e0e0;
-            flex-wrap: wrap;
-        }
-        .tab-btn {
-            padding: 10px 20px;
-            border: none;
-            background: transparent;
-            font-weight: 600;
-            cursor: pointer;
-            color: #666;
-            border-bottom: 3px solid transparent;
-            transition: 0.3s;
-            font-size: 16px;
-        }
-        .tab-btn.active {
-            color: #1e3c72;
-            border-bottom-color: #1e3c72;
-            background: #f0f4ff;
-            border-radius: 10px 10px 0 0;
-        }
-        .tab-btn:hover { background: #f0f4ff; border-radius: 10px 10px 0 0; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+<meta charset="UTF-8">
+<title>🏡 Planejador de Sítio Frutífero</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #2c3e50;
+    color: #ecf0f1;
+    padding: 15px;
+    min-height: 100vh;
+  }
+  h1 { text-align: center; margin-bottom: 15px; font-size: 1.4em; }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            align-items: end;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-        .form-group label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #555;
-            margin-bottom: 5px;
-        }
-        .form-group input, .form-group select {
-            padding: 10px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 14px;
-        }
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #2a5298;
-            box-shadow: 0 0 0 3px rgba(42,82,152,0.1);
-        }
-        .btn {
-            padding: 10px 25px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.3s;
-            font-size: 14px;
-        }
-        .btn-primary { background: #2a5298; color: white; }
-        .btn-primary:hover { background: #1e3c72; transform: translateY(-2px); }
-        .btn-success { background: #28a745; color: white; }
-        .btn-success:hover { background: #218838; transform: translateY(-2px); }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-danger:hover { background: #c82333; transform: translateY(-2px); }
-        .btn-warning { background: #ffc107; color: #333; }
-        .btn-warning:hover { background: #e0a800; transform: translateY(-2px); }
-        .btn-info { background: #17a2b8; color: white; }
-        .btn-info:hover { background: #138496; transform: translateY(-2px); }
-        .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .app {
+    display: grid;
+    grid-template-columns: 250px 1fr 280px;
+    gap: 15px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  @media (max-width: 1000px) {
+    .app { grid-template-columns: 1fr; }
+  }
 
-        .table-responsive { overflow-x: auto; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        thead { background: #1e3c72; color: white; }
-        th { padding: 12px 8px; text-align: left; font-weight: 600; white-space: nowrap; }
-        td { padding: 10px 8px; border-bottom: 1px solid #e0e0e0; }
-        tr:hover { background: #f7fafc; }
+  .painel {
+    background: #34495e;
+    border-radius: 12px;
+    padding: 15px;
+    height: fit-content;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .painel h2 {
+    font-size: 0.95em;
+    margin-bottom: 8px;
+    color: #f1c40f;
+    border-bottom: 1px solid #4a6274;
+    padding-bottom: 5px;
+  }
+  .painel h2:not(:first-child) { margin-top: 14px; }
 
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            display: inline-block;
-            white-space: nowrap;
-        }
-        .status-ok { background: #d4edda; color: #155724; }
-        .status-warning { background: #fff3cd; color: #856404; }
-        .status-error { background: #f8d7da; color: #721c24; }
-        .status-excellent { background: #cce5ff; color: #004085; }
+  .ferramenta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 4px;
+    transition: background 0.15s;
+    font-size: 0.82em;
+  }
+  .ferramenta:hover { background: #4a6274; }
+  .ferramenta.ativa {
+    background: #27ae60;
+    box-shadow: 0 0 10px rgba(39,174,96,0.5);
+  }
+  .ferramenta .icone {
+    font-size: 1.2em;
+    width: 22px;
+    text-align: center;
+  }
 
-        .summary {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-        .summary-card {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 15px;
-            text-align: center;
-        }
-        .summary-card h3 { font-size: 12px; color: #666; margin-bottom: 5px; text-transform: uppercase; }
-        .summary-card .number { font-size: 24px; font-weight: bold; color: #333; }
-        .summary-card .number.ok { color: #28a745; }
-        .summary-card .number.warning { color: #ffc107; }
-        .summary-card .number.error { color: #dc3545; }
-        .summary-card .number.excellent { color: #17a2b8; }
+  .config label {
+    display: block;
+    font-size: 0.82em;
+    margin-top: 8px;
+    margin-bottom: 3px;
+  }
+  .config input {
+    width: 100%;
+    padding: 6px;
+    border-radius: 6px;
+    border: none;
+    background: #2c3e50;
+    color: white;
+    font-size: 0.9em;
+  }
+  .config button {
+    width: 100%;
+    padding: 7px;
+    margin-top: 8px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    background: #3498db;
+    color: white;
+    font-size: 0.85em;
+  }
+  .config button:hover { background: #2980b9; }
 
-        .filter-section {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-            margin: 20px 0;
-        }
-        .filter-section select, .filter-section input {
-            padding: 8px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 14px;
-        }
+  .terreno-wrap {
+    background: #34495e;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: auto;
+    max-height: 90vh;
+  }
 
-        .faixa-aceitavel { background: #e8f5e9; padding: 2px 10px; border-radius: 12px; font-weight: 600; color: #2e7d32; font-size: 11px; }
-        .faixa-abaixo { background: #e3f2fd; padding: 2px 10px; border-radius: 12px; font-weight: 600; color: #0d47a1; font-size: 11px; }
-        .faixa-acima { background: #fff3e0; padding: 2px 10px; border-radius: 12px; font-weight: 600; color: #e65100; font-size: 11px; }
+  #terreno {
+    display: grid;
+    gap: 1px;
+    background: #1e2b38;
+    padding: 2px;
+    border-radius: 8px;
+    user-select: none;
+    touch-action: none;
+    position: relative;
+  }
+  .celula {
+    width: 26px;
+    height: 26px;
+    background: #7cb342;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    transition: filter 0.1s;
+    position: relative;
+  }
+  .celula:hover { filter: brightness(1.2); }
 
-        .card-dashboard {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-left: 5px solid #2a5298;
-        }
-        .card-dashboard .row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            align-items: center;
-        }
-        .card-dashboard .item {
-            flex: 1;
-            min-width: 150px;
-        }
-        .valor-grande { font-size: 28px; font-weight: bold; }
-        .semaforo { display: inline-block; width: 20px; height: 20px; border-radius: 50%; margin-right: 8px; }
-        .semaforo.verde { background: #28a745; }
-        .semaforo.amarelo { background: #ffc107; }
-        .semaforo.vermelho { background: #dc3545; }
-        .semaforo.azul { background: #17a2b8; }
+  .celula.fora {
+    background: #1a1a1a !important;
+    opacity: 0.35;
+  }
 
-        .loading {
-            text-align: center;
-            padding: 30px;
-            color: #666;
-            font-size: 16px;
-        }
+  .celula.grama   { background: #7cb342; }
+  .celula.terra   { background: #8d6e63; }
+  .celula.agua    { background: #42a5f5; }
+  .celula.areia   { background: #fdd835; }
+  .celula.pedra   { background: #9e9e9e; }
+  .celula.caminho { background: #bcaaa4; }
+  .celula.casa    { background: #e57373; font-size: 20px; }
+  .celula.horta   { background: #a1887f; font-size: 15px; }
+  .celula.poco    { background: #90a4ae; font-size: 16px; }
+  .celula.galpao  { background: #a1887f; font-size: 16px; }
 
-        /* Modal */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-overlay.active { display: flex; }
-        .modal {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        .modal h3 { margin-bottom: 20px; color: #1e3c72; }
-        .modal .form-group { margin-bottom: 15px; }
-        .modal .btn-group { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  .celula.acerola  { background: #ff5252; }
+  .celula.manga    { background: #ffb300; }
+  .celula.goiaba   { background: #e57373; }
+  .celula.maracuja { background: #ffd54f; }
+  .celula.cupuacu  { background: #8d6e63; }
+  .celula.graviola { background: #66bb6a; }
 
-        @media (max-width: 768px) {
-            .container { padding: 15px; }
-            .form-grid { grid-template-columns: 1fr; }
-            .tabs { flex-direction: column; }
-            .tab-btn { width: 100%; text-align: center; }
-        }
-    </style>
+  .celula.mangueira::after {
+    content: '';
+    position: absolute;
+    inset: 40%;
+    background: #00bcd4;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #00e5ff;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .celula.mangueira.irriga-h::before {
+    content: '';
+    position: absolute;
+    top: 45%; left: 0; right: 0;
+    height: 10%;
+    background: #00bcd4;
+    box-shadow: 0 0 6px #00e5ff;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .celula.mangueira.irriga-v::before {
+    content: '';
+    position: absolute;
+    left: 45%; top: 0; bottom: 0;
+    width: 10%;
+    background: #00bcd4;
+    box-shadow: 0 0 6px #00e5ff;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .celula.alcance {
+    box-shadow: inset 0 0 0 2px rgba(0,229,255,0.6);
+  }
+
+  .estatistica {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8em;
+    padding: 4px 0;
+    border-bottom: 1px dashed #4a6274;
+  }
+  .estatistica b { color: #f1c40f; }
+
+  .dica {
+    font-size: 0.75em;
+    color: #bdc3c7;
+    margin-top: 10px;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  .acoes { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .acoes button {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.8em;
+    color: white;
+  }
+  .btn-salvar { background: #27ae60; }
+  .btn-limpar { background: #c0392b; }
+  .btn-novo   { background: #f39c12; }
+
+  .toggle-alcance {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8em;
+    margin-top: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .toggle-alcance input { cursor: pointer; }
+
+  .lista-sitios {
+    max-height: 250px;
+    overflow-y: auto;
+    margin-top: 8px;
+  }
+  .item-sitio {
+    background: #2c3e50;
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    font-size: 0.8em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .item-sitio:hover { background: #3b536b; border-left-color: #f1c40f; }
+  .item-sitio.ativo { background: #27ae60; border-left-color: #fff; }
+  .item-sitio .nome { font-weight: bold; }
+  .item-sitio .data { font-size: 0.85em; opacity: 0.6; }
+  .item-sitio .btn-del {
+    background: #c0392b;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 2px 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-left: 6px;
+  }
+  .item-sitio .btn-del:hover { background: #e74c3c; }
+
+  .status-conexao {
+    font-size: 0.75em;
+    padding: 6px 10px;
+    border-radius: 6px;
+    text-align: center;
+    margin-bottom: 10px;
+    background: #fff3cd;
+    color: #856404;
+  }
+  .status-conexao.online { background: #d4edda; color: #155724; }
+  .status-conexao.offline { background: #f8d7da; color: #721c24; }
+
+  .campo-nome {
+    width: 100%;
+    padding: 8px;
+    border-radius: 6px;
+    border: 2px solid #4a6274;
+    background: #2c3e50;
+    color: white;
+    font-size: 0.9em;
+    margin-top: 5px;
+  }
+  .campo-nome:focus {
+    outline: none;
+    border-color: #f1c40f;
+  }
+</style>
 </head>
 <body>
-<div class="container">
-    <div class="header">
-        <h1>⛽ Fiscalizador de Preços</h1>
-        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-            <span style="background:#f0f4ff; padding:8px 15px; border-radius:10px; font-size:14px; color:#1e3c72;">
-                📅 <span id="dataAtual"></span>
-            </span>
-            <span id="statusConexao" style="background:#fff3cd; padding:4px 12px; border-radius:20px; font-size:12px; color:#856404;">🔄 Conectando...</span>
-        </div>
+<h1>🏡 Planejador de Sítio Frutífero</h1>
+
+<div class="app">
+
+  <div class="painel">
+    <h2>📐 Área do Sítio</h2>
+    <div id="ferramentasArea"></div>
+
+    <h2>🧰 Terreno</h2>
+    <div id="ferramentasTerreno"></div>
+
+    <h2>🏠 Estruturas</h2>
+    <div id="ferramentasEstruturas"></div>
+
+    <h2>💧 Irrigação</h2>
+    <div id="ferramentasIrrigacao"></div>
+    <label class="toggle-alcance">
+      <input type="checkbox" id="mostrarAlcance" onchange="render()">
+      Mostrar alcance da mangueira
+    </label>
+
+    <h2>🌳 Frutíferas</h2>
+    <div id="ferramentasFrutas"></div>
+  </div>
+
+  <div class="terreno-wrap">
+    <div id="terreno"></div>
+    <div class="dica">
+      💡 Clique ou arraste para pintar<br>
+      🖱️ Botão direito apaga • 1 célula ≈ 1 m²<br>
+      ✏️ <b>Marcar área</b> define o formato do sítio
+    </div>
+  </div>
+
+  <div class="painel">
+    <div id="statusConexao" class="status-conexao">🔄 Conectando ao Firebase...</div>
+
+    <h2>💾 Meus Sítios</h2>
+    <input type="text" id="nomeSitio" class="campo-nome" placeholder="Nome do sítio">
+    <div class="acoes">
+      <button class="btn-salvar" onclick="salvarNoFirebase()">💾 Salvar</button>
+      <button class="btn-novo" onclick="novoSitio()">✨ Novo</button>
+    </div>
+    <div id="listaSitios" class="lista-sitios">
+      <div style="text-align:center; padding:15px; font-size:0.8em; opacity:0.6;">Carregando...</div>
     </div>
 
-    <!-- Abas -->
-    <div class="tabs">
-        <button class="tab-btn active" data-tab="dashboard">📊 Dashboard</button>
-        <button class="tab-btn" data-tab="atualizar">📝 Atualizar</button>
-        <button class="tab-btn" data-tab="historico">📋 Histórico</button>
-        <button class="tab-btn" data-tab="regras">⚙️ Regras</button>
+    <h2>⚙️ Grade</h2>
+    <div class="config">
+      <label>Largura (m)</label>
+      <input type="number" id="largura" value="30" min="5" max="80">
+      <label>Altura (m)</label>
+      <input type="number" id="altura" value="25" min="5" max="80">
+      <button onclick="criarTerreno()">🔄 Redimensionar</button>
+      <button onclick="marcarTudo()" style="background:#27ae60;">🟩 Marcar tudo</button>
+      <button onclick="desmarcarTudo()" style="background:#c0392b;">🚫 Desmarcar tudo</button>
     </div>
 
-    <!-- Dashboard -->
-    <div id="dashboard" class="tab-content active">
-        <h3 style="margin-bottom:15px;">Situação Atual dos Preços</h3>
-        <div id="dashboardCards"><div class="loading">⏳ Carregando dados...</div></div>
-        <div id="dashboardResumo" class="summary"></div>
-    </div>
+    <h2>📊 Resumo do Sítio</h2>
+    <div id="estatisticas"></div>
 
-    <!-- Atualizar -->
-    <div id="atualizar" class="tab-content">
-        <h3 style="margin-bottom:15px;">Inserir novo preço da distribuidora</h3>
-        <div class="form-grid">
-            <div class="form-group">
-                <label>Combustível</label>
-                <select id="combustivelAtualizar">
-                    <option value="Gasolina Comum">Gasolina Comum</option>
-                    <option value="Gasolina Aditivada">Gasolina Aditivada</option>
-                    <option value="Etanol">Etanol</option>
-                    <option value="Diesel S-10">Diesel S-10</option>
-                    <option value="Diesel Comum">Diesel Comum</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Preço Médio SEFAZ (R$)</label>
-                <input type="number" id="precoMedioAtualizar" step="0.001" placeholder="0,000">
-            </div>
-            <div class="form-group">
-                <label>Preço Mínimo SEFAZ (R$)</label>
-                <input type="number" id="precoMinimoAtualizar" step="0.001" placeholder="0,000">
-            </div>
-            <div class="form-group">
-                <label>Preço Praticado (R$)</label>
-                <input type="number" id="precoPraticadoAtualizar" step="0.001" placeholder="0,000">
-            </div>
-            <div class="form-group">
-                <label>Data (opcional)</label>
-                <input type="date" id="dataAtualizar">
-            </div>
-            <div class="form-group">
-                <label>Hora (opcional)</label>
-                <input type="time" id="horaAtualizar">
-            </div>
-            <div class="form-group" style="grid-column: span 1;">
-                <button class="btn btn-success" onclick="salvarPreco()" style="width:100%;">💾 Salvar Preço</button>
-            </div>
-        </div>
-        <div id="msgAtualizar" style="margin-top:15px;"></div>
+    <h2>🗑️ Ações</h2>
+    <div class="acoes">
+      <button class="btn-limpar" onclick="limparTudo()">Limpar grade</button>
     </div>
+  </div>
 
-    <!-- Histórico -->
-    <div id="historico" class="tab-content">
-        <h3 style="margin-bottom:15px;">Histórico de Preços</h3>
-        <div class="filter-section">
-            <label>Combustível:</label>
-            <select id="filtroCombustivel" onchange="renderizarHistorico()">
-                <option value="todos">Todos</option>
-                <option value="Gasolina Comum">Gasolina Comum</option>
-                <option value="Gasolina Aditivada">Gasolina Aditivada</option>
-                <option value="Etanol">Etanol</option>
-                <option value="Diesel S-10">Diesel S-10</option>
-                <option value="Diesel Comum">Diesel Comum</option>
-            </select>
-            <label>Período:</label>
-            <select id="filtroPeriodo" onchange="renderizarHistorico()">
-                <option value="todos">Todos</option>
-                <option value="7">Últimos 7 dias</option>
-                <option value="30">Últimos 30 dias</option>
-                <option value="90">Últimos 90 dias</option>
-            </select>
-            <button class="btn btn-warning" onclick="limparFiltrosHistorico()">🔄 Limpar Filtros</button>
-        </div>
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Data</th>
-                        <th>Combustível</th>
-                        <th>Preço Médio</th>
-                        <th>Preço Mínimo</th>
-                        <th>Regra 1</th>
-                        <th>Regra 2</th>
-                        <th>Regra 3</th>
-                        <th>Faixa Aceitável</th>
-                        <th>Preço Praticado</th>
-                        <th>Status</th>
-                        <th>Regra mais próxima</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="tabelaHistorico">
-                    <tr><td colspan="12" class="loading">⏳ Carregando histórico...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Regras -->
-    <div id="regras" class="tab-content">
-        <h3 style="margin-bottom:15px;">Configuração das Regras de Cálculo</h3>
-        <div class="form-grid" style="max-width:500px;">
-            <div class="form-group">
-                <label>Valor da Regra 1 (Preço Médio - X)</label>
-                <input type="number" id="regra1Valor" step="0.001" value="0.180">
-            </div>
-            <div class="form-group">
-                <label>Valor da Regra 2 (Preço Mínimo + Y)</label>
-                <input type="number" id="regra2Valor" step="0.001" value="0.070">
-            </div>
-            <div class="form-group" style="grid-column: span 1;">
-                <button class="btn btn-primary" onclick="salvarRegras()">💾 Salvar Regras</button>
-            </div>
-        </div>
-        <div id="msgRegras" style="margin-top:15px;"></div>
-    </div>
-
-</div>
-
-<!-- Modal de Edição -->
-<div class="modal-overlay" id="modalEdicao">
-    <div class="modal">
-        <h3>✏️ Editar Data/Hora</h3>
-        <div class="form-group">
-            <label>Data</label>
-            <input type="date" id="modalData">
-        </div>
-        <div class="form-group">
-            <label>Hora</label>
-            <input type="time" id="modalHora">
-        </div>
-        <div class="btn-group">
-            <button class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
-            <button class="btn btn-primary" onclick="salvarEdicao()">💾 Salvar</button>
-        </div>
-        <div id="msgModal" style="margin-top:10px;"></div>
-    </div>
 </div>
 
 <script type="importmap">
@@ -392,23 +373,11 @@
 
 <script type="module">
 import { initializeApp } from "firebase/app";
-import { 
-    getFirestore, 
-    collection, 
-    addDoc, 
-    getDocs, 
-    query, 
-    orderBy, 
-    where, 
-    onSnapshot,
-    deleteDoc,
-    doc,
-    updateDoc,
-    getDoc,
-    setDoc
+import {
+    getFirestore, collection, addDoc, getDocs, query, orderBy,
+    onSnapshot, deleteDoc, doc, updateDoc
 } from "firebase/firestore";
 
-// ==================== FIREBASE CONFIG ====================
 const firebaseConfig = {
     apiKey: "AIzaSyAyAtL3v2jSnUd4gGAU0zWXhqI84kngsio",
     authDomain: "fiscalizador-preco.firebaseapp.com",
@@ -416,404 +385,436 @@ const firebaseConfig = {
     projectId: "fiscalizador-preco",
     storageBucket: "fiscalizador-preco.firebasestorage.app",
     messagingSenderId: "968106554702",
-    appId: "1:968106554702:web:e812a8e07e2aac33eb5a1f",
-    measurementId: "G-82TSJJ2V9P"
+    appId: "1:968106554702:web:e812a8e07e2aac33eb5a1f"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const COLECAO_SITIOS = 'sitios';
 
-// Status de conexão
+const FERRAMENTAS = [
+  { id: 'marcar',    nome: 'Marcar área',    icone: '✏️', classe: 'grama', grupo: 'area', acao: 'marcar' },
+  { id: 'desmarcar', nome: 'Desmarcar',      icone: '🚫', classe: 'grama', grupo: 'area', acao: 'desmarcar' },
+  { id: 'grama',   nome: 'Grama',       icone: '🟩', classe: 'grama',   grupo: 'terreno', emoji: '' },
+  { id: 'terra',   nome: 'Terra',       icone: '🟫', classe: 'terra',   grupo: 'terreno', emoji: '' },
+  { id: 'agua',    nome: 'Lago/Água',   icone: '💧', classe: 'agua',    grupo: 'terreno', emoji: '' },
+  { id: 'caminho', nome: 'Caminho',     icone: '🛤️', classe: 'caminho', grupo: 'terreno', emoji: '' },
+  { id: 'areia',   nome: 'Areia',       icone: '🟨', classe: 'areia',   grupo: 'terreno', emoji: '' },
+  { id: 'pedra',   nome: 'Pedra',       icone: '⬜', classe: 'pedra',   grupo: 'terreno', emoji: '' },
+  { id: 'casa',    nome: 'Casa',        icone: '🏠', classe: 'casa',    grupo: 'estrutura', emoji: '🏠' },
+  { id: 'horta',   nome: 'Horta',       icone: '🥬', classe: 'horta',   grupo: 'estrutura', emoji: '🥬' },
+  { id: 'poco',    nome: 'Poço/Caixa',  icone: '🚰', classe: 'poco',    grupo: 'estrutura', emoji: '🚰' },
+  { id: 'galpao',  nome: 'Galpão',      icone: '🏚️', classe: 'galpao',  grupo: 'estrutura', emoji: '🏚️' },
+  { id: 'mangueira', nome: 'Mangueira', icone: '🚿', classe: 'mangueira', grupo: 'irrigacao', emoji: '' },
+  { id: 'acerola',  nome: 'Acerola',   icone: '🔴', classe: 'acerola',  grupo: 'fruta', emoji: '🌳', espacamento: 3, producao: 20 },
+  { id: 'manga',    nome: 'Manga',     icone: '🥭', classe: 'manga',    grupo: 'fruta', emoji: '🥭', espacamento: 8, producao: 100 },
+  { id: 'goiaba',   nome: 'Goiaba',    icone: '🍈', classe: 'goiaba',   grupo: 'fruta', emoji: '🍈', espacamento: 5, producao: 60 },
+  { id: 'maracuja', nome: 'Maracujá',  icone: '🟡', classe: 'maracuja', grupo: 'fruta', emoji: '🟡', espacamento: 3, producao: 40 },
+  { id: 'cupuacu',  nome: 'Cupuaçu',   icone: '🟤', classe: 'cupuacu',  grupo: 'fruta', emoji: '🟤', espacamento: 6, producao: 50 },
+  { id: 'graviola', nome: 'Graviola',  icone: '🟢', classe: 'graviola', grupo: 'fruta', emoji: '🍏', espacamento: 6, producao: 70 },
+];
+
+let ferramentaAtual = 'marcar';
+let grid = [];
+let ativo = [];
+let larguraAtual = 30;
+let alturaAtual = 25;
+let pintando = false;
+let mostrarAlcance = false;
+let sitiosSalvos = [];
+let idSitioAtual = null;
+
+function montarFerramentas() {
+  const grupos = {
+    area:      'ferramentasArea',
+    terreno:   'ferramentasTerreno',
+    estrutura: 'ferramentasEstruturas',
+    irrigacao: 'ferramentasIrrigacao',
+    fruta:     'ferramentasFrutas',
+  };
+
+  Object.entries(grupos).forEach(([grupo, containerId]) => {
+    const el = document.getElementById(containerId);
+    el.innerHTML = '';
+    FERRAMENTAS.filter(f => f.grupo === grupo).forEach(f => {
+      const div = document.createElement('div');
+      div.className = 'ferramenta' + (f.id === ferramentaAtual ? ' ativa' : '');
+      const extra = f.espacamento ? ` <span style="opacity:.5">~${f.espacamento}m</span>` : '';
+      div.innerHTML = `<span class="icone">${f.icone}</span><span>${f.nome}${extra}</span>`;
+      div.onclick = () => {
+        ferramentaAtual = f.id;
+        montarFerramentas();
+      };
+      el.appendChild(div);
+    });
+  });
+}
+
+function criarTerreno() {
+  larguraAtual = Math.max(5, Math.min(80, +document.getElementById('largura').value || 30));
+  alturaAtual  = Math.max(5, Math.min(80, +document.getElementById('altura').value || 25));
+
+  const oldGrid = grid;
+  const oldAtivo = ativo;
+  const oldW = grid[0]?.length || 0;
+  const oldH = grid.length || 0;
+
+  grid = Array.from({length: alturaAtual}, (_, y) =>
+    Array.from({length: larguraAtual}, (_, x) => {
+      if (y < oldH && x < oldW) return oldGrid[y][x];
+      return 'grama';
+    })
+  );
+  ativo = Array.from({length: alturaAtual}, (_, y) =>
+    Array.from({length: larguraAtual}, (_, x) => {
+      if (y < oldH && x < oldW) return oldAtivo[y][x];
+      return true;
+    })
+  );
+  render();
+}
+
+function marcarTudo() {
+  for (let y = 0; y < alturaAtual; y++)
+    for (let x = 0; x < larguraAtual; x++) ativo[y][x] = true;
+  render();
+}
+function desmarcarTudo() {
+  for (let y = 0; y < alturaAtual; y++)
+    for (let x = 0; x < larguraAtual; x++) ativo[y][x] = false;
+  render();
+}
+
+function render() {
+  mostrarAlcance = document.getElementById('mostrarAlcance').checked;
+  const terr = document.getElementById('terreno');
+  terr.style.gridTemplateColumns = `repeat(${larguraAtual}, 26px)`;
+  terr.innerHTML = '';
+
+  const alcance = new Set();
+  if (mostrarAlcance) {
+    for (let y = 0; y < alturaAtual; y++)
+      for (let x = 0; x < larguraAtual; x++)
+        if (grid[y][x] === 'mangueira') {
+          for (let dy = -2; dy <= 2; dy++)
+            for (let dx = -2; dx <= 2; dx++) {
+              const ny = y + dy, nx = x + dx;
+              if (ny >= 0 && ny < alturaAtual && nx >= 0 && nx < larguraAtual)
+                alcance.add(ny * larguraAtual + nx);
+            }
+        }
+  }
+
+  for (let y = 0; y < alturaAtual; y++) {
+    for (let x = 0; x < larguraAtual; x++) {
+      const cel = document.createElement('div');
+      const tipoId = grid[y][x];
+      const f = FERRAMENTAS.find(t => t.id === tipoId) || FERRAMENTAS[0];
+      cel.className = 'celula ' + f.classe;
+      if (!ativo[y][x]) cel.classList.add('fora');
+      if (mostrarAlcance && alcance.has(y * larguraAtual + x) && tipoId !== 'mangueira')
+        cel.classList.add('alcance');
+      if (f.emoji) cel.textContent = f.emoji;
+      cel.title = f.nome;
+
+      if (tipoId === 'mangueira') {
+        const viz = (nx, ny) => nx>=0 && nx<larguraAtual && ny>=0 && ny<alturaAtual && grid[ny][nx] === 'mangueira';
+        const e = viz(x-1,y), d = viz(x+1,y), c = viz(x,y-1), b = viz(x,y+1);
+        if ((e && d) || (!e && !d)) cel.classList.add('irriga-h');
+        if ((c && b) || (!c && !b)) cel.classList.add('irriga-v');
+      }
+
+      cel.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        pintando = true;
+        if (e.button === 2) apagarCelula(x, y);
+        else pintarCelula(x, y);
+      });
+      cel.addEventListener('mouseenter', () => {
+        if (pintando) pintarCelula(x, y);
+      });
+
+      terr.appendChild(cel);
+    }
+  }
+  atualizarEstatisticas();
+}
+
+function pintarCelula(x, y) {
+  const f = FERRAMENTAS.find(t => t.id === ferramentaAtual);
+  if (!f) return;
+
+  if (f.acao === 'marcar') {
+    if (!ativo[y][x]) { ativo[y][x] = true; atualizarCelulaDOM(x, y); atualizarEstatisticas(); }
+    return;
+  }
+  if (f.acao === 'desmarcar') {
+    if (ativo[y][x]) {
+      ativo[y][x] = false;
+      grid[y][x] = 'grama';
+      atualizarCelulaDOM(x, y);
+      atualizarEstatisticas();
+    }
+    return;
+  }
+
+  if (!ativo[y][x]) return;
+  if (grid[y][x] === f.id) return;
+  grid[y][x] = f.id;
+  atualizarCelulaDOM(x, y);
+  atualizarEstatisticas();
+}
+
+function apagarCelula(x, y) {
+  if (!ativo[y][x]) return;
+  grid[y][x] = 'grama';
+  atualizarCelulaDOM(x, y);
+  atualizarEstatisticas();
+}
+
+function atualizarCelulaDOM(x, y) {
+  const terr = document.getElementById('terreno');
+  const idx = y * larguraAtual + x;
+  const cel = terr.children[idx];
+  if (!cel) return;
+
+  const tipoId = grid[y][x];
+  const f = FERRAMENTAS.find(t => t.id === tipoId) || FERRAMENTAS[0];
+  cel.className = 'celula ' + f.classe;
+  if (!ativo[y][x]) cel.classList.add('fora');
+  cel.textContent = f.emoji || '';
+  cel.title = f.nome;
+
+  const redesenhar = (cx, cy) => {
+    if (cx<0||cx>=larguraAtual||cy<0||cy>=alturaAtual) return;
+    const idc = cy * larguraAtual + cx;
+    const c = terr.children[idc];
+    if (!c) return;
+    const tp = grid[cy][cx];
+    const ff = FERRAMENTAS.find(t => t.id === tp) || FERRAMENTAS[0];
+    c.className = 'celula ' + ff.classe;
+    if (!ativo[cy][cx]) c.classList.add('fora');
+    if (mostrarAlcance) {
+      for (let dy=-2; dy<=2; dy++) for (let dx=-2; dx<=2; dx++) {
+        const ny=cy+dy, nx=cx+dx;
+        if (ny>=0&&ny<alturaAtual&&nx>=0&&nx<larguraAtual&&grid[ny][nx]==='mangueira'&&!(dy===0&&dx===0)) {
+          if (tp !== 'mangueira') c.classList.add('alcance');
+        }
+      }
+    }
+    c.textContent = ff.emoji || '';
+    c.title = ff.nome;
+    if (tp === 'mangueira') {
+      const viz = (nx, ny) => nx>=0 && nx<larguraAtual && ny>=0 && ny<alturaAtual && grid[ny][nx] === 'mangueira';
+      const e = viz(cx-1,cy), d = viz(cx+1,cy), cc = viz(cx,cy-1), b = viz(cx,cy+1);
+      if ((e && d) || (!e && !d)) c.classList.add('irriga-h');
+      if ((cc && b) || (!cc && !b)) c.classList.add('irriga-v');
+    }
+  };
+
+  redesenhar(x, y);
+  redesenhar(x-1, y); redesenhar(x+1, y);
+  redesenhar(x, y-1); redesenhar(x, y+1);
+}
+
+function atualizarEstatisticas() {
+  const contagem = {};
+  let areaAtiva = 0;
+  for (let y = 0; y < alturaAtual; y++)
+    for (let x = 0; x < larguraAtual; x++) {
+      if (ativo[y][x]) areaAtiva++;
+      const t = grid[y][x];
+      if (ativo[y][x]) contagem[t] = (contagem[t] || 0) + 1;
+    }
+
+  const totalGrade = larguraAtual * alturaAtual;
+  let html = `<div class="estatistica"><span>📐 Área do sítio</span><b>${areaAtiva} m²</b></div>`;
+  html += `<div class="estatistica"><span>🗺️ Grade total</span><b>${totalGrade} m²</b></div>`;
+
+  const frutas = FERRAMENTAS.filter(f => f.grupo === 'fruta');
+  const temFruta = frutas.some(f => (contagem[f.id] || 0) > 0);
+  if (temFruta) {
+    html += `<div style="margin-top:8px; font-size:.75em; color:#f1c40f; font-weight:bold;">🌳 FRUTÍFERAS</div>`;
+    let totalProducao = 0;
+    frutas.forEach(f => {
+      const qtd = contagem[f.id] || 0;
+      if (qtd > 0) {
+        const prod = qtd * f.producao;
+        totalProducao += prod;
+        html += `<div class="estatistica"><span>${f.icone} ${f.nome}</span><b>${qtd} pés</b></div>`;
+      }
+    });
+    html += `<div class="estatistica" style="border:none; color:#2ecc71;">
+      <span>🌾 Produção estimada/ano</span><b>~${totalProducao} kg</b></div>`;
+  }
+
+  const estruturas = FERRAMENTAS.filter(f => f.grupo === 'estrutura');
+  if (estruturas.some(f => (contagem[f.id] || 0) > 0)) {
+    html += `<div style="margin-top:8px; font-size:.75em; color:#f1c40f; font-weight:bold;">🏠 ESTRUTURAS</div>`;
+    estruturas.forEach(f => {
+      const qtd = contagem[f.id] || 0;
+      if (qtd > 0) html += `<div class="estatistica"><span>${f.icone} ${f.nome}</span><b>${qtd} m²</b></div>`;
+    });
+  }
+
+  const qtdMang = contagem['mangueira'] || 0;
+  if (qtdMang > 0) {
+    html += `<div style="margin-top:8px; font-size:.75em; color:#f1c40f; font-weight:bold;">💧 IRRIGAÇÃO</div>`;
+    html += `<div class="estatistica"><span>🚿 Mangueira</span><b>${qtdMang} m</b></div>`;
+  }
+
+  document.getElementById('estatisticas').innerHTML = html;
+}
+
 const statusEl = document.getElementById('statusConexao');
-statusEl.textContent = '✅ Conectado ao Firestore';
-statusEl.style.background = '#d4edda';
-statusEl.style.color = '#155724';
 
-// ==================== VARIÁVEIS GLOBAIS ====================
-let dados = [];
-let regras = { regra1: 0.180, regra2: 0.070 };
-let idEditando = null;
-
-// ==================== FUNÇÕES DE CÁLCULO ====================
-function calcularRegras(precoMedio, precoMinimo, regra1, regra2) {
-    const r1 = precoMedio - regra1;
-    const r2 = precoMinimo + regra2;
-    const r3 = (precoMinimo + precoMedio) / 2;
-    const valores = [r1, r2, r3];
-    const menor = Math.min(...valores);
-    const maior = Math.max(...valores);
-    return { regra1: r1, regra2: r2, regra3: r3, faixaMin: menor, faixaMax: maior };
+function setStatus(texto, tipo) {
+  statusEl.textContent = texto;
+  statusEl.className = 'status-conexao' + (tipo ? ' ' + tipo : '');
 }
 
-function calcularStatus(precoPraticado, faixaMin, faixaMax) {
-    if (precoPraticado < faixaMin) return 'excellent';
-    if (precoPraticado <= faixaMax) return 'ok';
-    if (precoPraticado <= faixaMax + 0.05) return 'warning';
-    return 'error';
-}
+async function salvarNoFirebase() {
+  const nome = document.getElementById('nomeSitio').value.trim();
+  if (!nome) {
+    alert('⚠️ Digite um nome para o sítio antes de salvar.');
+    return;
+  }
 
-function getStatusInfo(status) {
-    const map = {
-        'excellent': { text: '📊 Abaixo da Faixa', class: 'status-excellent' },
-        'ok': { text: '✅ Dentro da Faixa', class: 'status-ok' },
-        'warning': { text: '⚠️ Acima da Faixa', class: 'status-warning' },
-        'error': { text: '❌ Muito Acima', class: 'status-error' }
-    };
-    return map[status] || map['ok'];
-}
+  const registro = {
+    nome: nome,
+    largura: larguraAtual,
+    altura: alturaAtual,
+    grid: grid,
+    ativo: ativo,
+    atualizadoEm: new Date().toISOString()
+  };
 
-function regraMaisProxima(precoPraticado, regra1, regra2, regra3) {
-    const regrasLista = [
-        { nome: '1', valor: regra1 },
-        { nome: '2', valor: regra2 },
-        { nome: '3', valor: regra3 }
-    ];
-    let maisProx = regrasLista[0];
-    let menorDist = Math.abs(precoPraticado - regrasLista[0].valor);
-    for (let i = 1; i < regrasLista.length; i++) {
-        const dist = Math.abs(precoPraticado - regrasLista[i].valor);
-        if (dist < menorDist) {
-            menorDist = dist;
-            maisProx = regrasLista[i];
-        }
-    }
-    const diferenca = precoPraticado - maisProx.valor;
-    return {
-        regra: maisProx.nome,
-        diferenca: diferenca,
-        centavos: diferenca * 100
-    };
-}
-
-// ==================== FIREBASE OPERATIONS ====================
-function carregarRegrasFirestore() {
-    const docRef = doc(db, 'config', 'regras');
-    getDoc(docRef).then((docSnap) => {
-        if (docSnap.exists()) {
-            regras = docSnap.data();
-            document.getElementById('regra1Valor').value = regras.regra1;
-            document.getElementById('regra2Valor').value = regras.regra2;
-        } else {
-            setDoc(docRef, { regra1: 0.180, regra2: 0.070 });
-        }
-    }).catch(error => {
-        console.error('Erro ao carregar regras:', error);
-    });
-}
-
-function salvarRegrasFirestore(regra1, regra2) {
-    const docRef = doc(db, 'config', 'regras');
-    return setDoc(docRef, { regra1, regra2 });
-}
-
-function carregarDadosFirestore() {
-    const q = query(collection(db, 'precos'), orderBy('data', 'desc'));
-    onSnapshot(q, (snapshot) => {
-        dados = [];
-        snapshot.forEach((doc) => {
-            dados.push({ id: doc.id, ...doc.data() });
-        });
-        document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR');
-        renderizarDashboard();
-        renderizarHistorico();
-    }, (error) => {
-        console.error('Erro ao carregar dados:', error);
-        document.getElementById('dashboardCards').innerHTML = 
-            '<div class="loading" style="color:#dc3545;">❌ Erro ao conectar ao banco de dados. Verifique sua internet.</div>';
-        document.getElementById('statusConexao').textContent = '�️ Desconectado';
-        document.getElementById('statusConexao').style.background = '#f8d7da';
-        document.getElementById('statusConexao').style.color = '#721c24';
-    });
-}
-
-// ==================== SALVAR PREÇO ====================
-window.salvarPreco = async function() {
-    const combustivel = document.getElementById('combustivelAtualizar').value;
-    const precoMedio = parseFloat(document.getElementById('precoMedioAtualizar').value);
-    const precoMinimo = parseFloat(document.getElementById('precoMinimoAtualizar').value);
-    const precoPraticado = parseFloat(document.getElementById('precoPraticadoAtualizar').value);
-    const dataInput = document.getElementById('dataAtualizar').value;
-    const horaInput = document.getElementById('horaAtualizar').value;
-    const msgEl = document.getElementById('msgAtualizar');
-
-    if (isNaN(precoMedio) || isNaN(precoMinimo) || isNaN(precoPraticado)) {
-        msgEl.innerHTML = '<span style="color:#dc3545;">Preencha todos os campos de preço corretamente.</span>';
-        return;
-    }
-    if (precoMedio <= 0 || precoMinimo <= 0 || precoPraticado <= 0) {
-        msgEl.innerHTML = '<span style="color:#dc3545;">Os preços devem ser maiores que zero.</span>';
-        return;
-    }
-    if (precoMinimo > precoMedio) {
-        msgEl.innerHTML = '<span style="color:#dc3545;">Preço mínimo não pode ser maior que o médio.</span>';
-        return;
-    }
-
-    // Data e hora: se o usuário não preencher, usa a atual
-    let data = dataInput || new Date().toISOString().slice(0,10);
-    let hora = horaInput || new Date().toLocaleTimeString('pt-BR');
-
-    const { regra1, regra2, regra3, faixaMin, faixaMax } = calcularRegras(precoMedio, precoMinimo, regras.regra1, regras.regra2);
-    const status = calcularStatus(precoPraticado, faixaMin, faixaMax);
-    const prox = regraMaisProxima(precoPraticado, regra1, regra2, regra3);
-
-    const registro = {
-        data: data,
-        hora: hora,
-        combustivel: combustivel,
-        precoMedio: precoMedio,
-        precoMinimo: precoMinimo,
-        precoPraticado: precoPraticado,
-        regra1: regra1,
-        regra2: regra2,
-        regra3: regra3,
-        faixaMin: faixaMin,
-        faixaMax: faixaMax,
-        status: status,
-        regraMaisProxima: prox.regra,
-        diferencaCentavos: prox.centavos
-    };
-
-    try {
-        await addDoc(collection(db, 'precos'), registro);
-        msgEl.innerHTML = `<span style="color:#28a745;">✅ Preço de ${combustivel} salvo com sucesso!</span>`;
-        document.getElementById('precoMedioAtualizar').value = '';
-        document.getElementById('precoMinimoAtualizar').value = '';
-        document.getElementById('precoPraticadoAtualizar').value = '';
-        document.getElementById('dataAtualizar').value = '';
-        document.getElementById('horaAtualizar').value = '';
-
-        // Pré-preencher com os últimos valores desse combustível
-        const ultimo = dados.filter(d => d.combustivel === combustivel).slice(-1)[0];
-        if (ultimo) {
-            document.getElementById('precoMedioAtualizar').value = ultimo.precoMedio;
-            document.getElementById('precoMinimoAtualizar').value = ultimo.precoMinimo;
-        }
-    } catch (error) {
-        console.error('Erro ao salvar:', error);
-        msgEl.innerHTML = `<span style="color:#dc3545;">❌ Erro ao salvar: ${error.message}</span>`;
-    }
-};
-
-// ==================== DELETAR PREÇO ====================
-window.deletarPreco = async function(id) {
-    if (!confirm('Tem certeza que deseja excluir este registro?')) return;
-    try {
-        await deleteDoc(doc(db, 'precos', id));
-    } catch (error) {
-        console.error('Erro ao deletar:', error);
-        alert('Erro ao excluir registro.');
-    }
-};
-
-// ==================== MODAL DE EDIÇÃO ====================
-window.abrirModalEdicao = function(id) {
-    const item = dados.find(d => d.id === id);
-    if (!item) return;
-    idEditando = id;
-    document.getElementById('modalData').value = item.data;
-    document.getElementById('modalHora').value = item.hora;
-    document.getElementById('msgModal').innerHTML = '';
-    document.getElementById('modalEdicao').classList.add('active');
-};
-
-window.fecharModal = function() {
-    document.getElementById('modalEdicao').classList.remove('active');
-    idEditando = null;
-};
-
-window.salvarEdicao = async function() {
-    if (!idEditando) return;
-    const novaData = document.getElementById('modalData').value;
-    const novaHora = document.getElementById('modalHora').value;
-    const msgEl = document.getElementById('msgModal');
-
-    if (!novaData || !novaHora) {
-        msgEl.innerHTML = '<span style="color:#dc3545;">Preencha data e hora.</span>';
-        return;
-    }
-
-    try {
-        const docRef = doc(db, 'precos', idEditando);
-        await updateDoc(docRef, {
-            data: novaData,
-            hora: novaHora
-        });
-        msgEl.innerHTML = '<span style="color:#28a745;">✅ Data e hora atualizadas com sucesso!</span>';
-        fecharModal();
-    } catch (error) {
-        console.error('Erro ao atualizar:', error);
-        msgEl.innerHTML = `<span style="color:#dc3545;">❌ Erro ao atualizar: ${error.message}</span>`;
-    }
-};
-
-// ==================== DASHBOARD ====================
-function renderizarDashboard() {
-    const container = document.getElementById('dashboardCards');
-    const resumo = document.getElementById('dashboardResumo');
-
-    const combustiveis = ['Gasolina Comum', 'Gasolina Aditivada', 'Etanol', 'Diesel S-10', 'Diesel Comum'];
-    let cards = '';
-    let totalOk = 0, totalWarning = 0, totalError = 0, totalExcellent = 0;
-
-    combustiveis.forEach(comb => {
-        const ultimo = dados.filter(d => d.combustivel === comb).slice(-1)[0];
-        if (!ultimo) {
-            cards += `
-                <div class="card-dashboard" style="border-left-color:#999;">
-                    <h4>${comb}</h4>
-                    <p style="color:#999;">Nenhum preço cadastrado ainda.</p>
-                </div>
-            `;
-            return;
-        }
-        const statusInfo = getStatusInfo(ultimo.status);
-        let semaforoClass = '';
-        if (ultimo.status === 'ok') semaforoClass = 'verde';
-        else if (ultimo.status === 'warning') semaforoClass = 'amarelo';
-        else if (ultimo.status === 'error') semaforoClass = 'vermelho';
-        else if (ultimo.status === 'excellent') semaforoClass = 'azul';
-
-        const sinal = ultimo.diferencaCentavos >= 0 ? '+' : '';
-        const borderColor = ultimo.status === 'ok' ? '#28a745' : ultimo.status === 'warning' ? '#ffc107' : ultimo.status === 'error' ? '#dc3545' : '#17a2b8';
-        cards += `
-            <div class="card-dashboard" style="border-left-color:${borderColor};">
-                <div class="row">
-                    <div class="item"><h4>${ultimo.combustivel}</h4></div>
-                    <div class="item"><span class="semaforo ${semaforoClass}"></span> <span class="valor-grande">R$ ${ultimo.precoPraticado.toFixed(3)}</span></div>
-                    <div class="item">Faixa: R$ ${ultimo.faixaMin.toFixed(3)} – R$ ${ultimo.faixaMax.toFixed(3)}</div>
-                    <div class="item"><span class="status-badge ${statusInfo.class}">${statusInfo.text}</span></div>
-                    <div class="item">Regra ${ultimo.regraMaisProxima}: ${sinal}${ultimo.diferencaCentavos.toFixed(1)} centavos</div>
-                    <div class="item" style="font-size:12px; color:#666;">Última atualização: ${ultimo.data} ${ultimo.hora}</div>
-                </div>
-            </div>
-        `;
-
-        if (ultimo.status === 'ok') totalOk++;
-        else if (ultimo.status === 'warning') totalWarning++;
-        else if (ultimo.status === 'error') totalError++;
-        else if (ultimo.status === 'excellent') totalExcellent++;
-    });
-
-    container.innerHTML = cards;
-
-    resumo.innerHTML = `
-        <div class="summary-card"><h3>✅ Dentro</h3><div class="number ok">${totalOk}</div></div>
-        <div class="summary-card"><h3>📊 Abaixo</h3><div class="number excellent">${totalExcellent}</div></div>
-        <div class="summary-card"><h3>⚠️ Acima</h3><div class="number warning">${totalWarning}</div></div>
-        <div class="summary-card"><h3>❌ Muito Acima</h3><div class="number error">${totalError}</div></div>
-    `;
-}
-
-// ==================== HISTÓRICO ====================
-window.renderizarHistorico = function() {
-    const tbody = document.getElementById('tabelaHistorico');
-    const filtroComb = document.getElementById('filtroCombustivel').value;
-    const filtroPeriodo = parseInt(document.getElementById('filtroPeriodo').value);
-
-    let filtrados = dados;
-    if (filtroComb !== 'todos') {
-        filtrados = filtrados.filter(d => d.combustivel === filtroComb);
-    }
-    if (!isNaN(filtroPeriodo)) {
-        const dataLimite = new Date();
-        dataLimite.setDate(dataLimite.getDate() - filtroPeriodo);
-        filtrados = filtrados.filter(d => new Date(d.data) >= dataLimite);
-    }
-
-    if (filtrados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:#999; padding:30px;">Nenhum registro encontrado.</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = filtrados.slice().reverse().map(item => {
-        const statusInfo = getStatusInfo(item.status);
-        const sinal = item.diferencaCentavos >= 0 ? '+' : '';
-        return `
-            <tr>
-                <td>${item.data} ${item.hora}</td>
-                <td>${item.combustivel}</td>
-                <td>R$ ${item.precoMedio.toFixed(3)}</td>
-                <td>R$ ${item.precoMinimo.toFixed(3)}</td>
-                <td>R$ ${item.regra1.toFixed(3)}</td>
-                <td>R$ ${item.regra2.toFixed(3)}</td>
-                <td>R$ ${item.regra3.toFixed(3)}</td>
-                <td>R$ ${item.faixaMin.toFixed(3)} ⟷ R$ ${item.faixaMax.toFixed(3)}</td>
-                <td><strong>R$ ${item.precoPraticado.toFixed(3)}</strong></td>
-                <td><span class="status-badge ${statusInfo.class}">${statusInfo.text}</span></td>
-                <td>Regra ${item.regraMaisProxima}: ${sinal}${item.diferencaCentavos.toFixed(1)} c</td>
-                <td>
-                    <button class="btn btn-info btn-sm" onclick="abrirModalEdicao('${item.id}')" title="Editar data/hora">✏️</button>
-                    <button class="btn btn-danger btn-sm" onclick="deletarPreco('${item.id}')" title="Excluir">🗑️</button>
-                </td>
-            </tr>
-        `;
-    }).join('');
-};
-
-window.limparFiltrosHistorico = function() {
-    document.getElementById('filtroCombustivel').value = 'todos';
-    document.getElementById('filtroPeriodo').value = 'todos';
-    renderizarHistorico();
-};
-
-// ==================== REGRAS ====================
-window.salvarRegras = async function() {
-    const r1 = parseFloat(document.getElementById('regra1Valor').value);
-    const r2 = parseFloat(document.getElementById('regra2Valor').value);
-    const msgEl = document.getElementById('msgRegras');
-
-    if (isNaN(r1) || isNaN(r2) || r1 < 0 || r2 < 0) {
-        msgEl.innerHTML = '<span style="color:#dc3545;">Valores inválidos. Digite números positivos.</span>';
-        return;
-    }
-    try {
-        await salvarRegrasFirestore(r1, r2);
-        regras.regra1 = r1;
-        regras.regra2 = r2;
-        msgEl.innerHTML = '<span style="color:#28a745;">✅ Regras atualizadas com sucesso!</span>';
-        carregarDadosFirestore();
-    } catch (error) {
-        msgEl.innerHTML = `<span style="color:#dc3545;">❌ Erro ao salvar: ${error.message}</span>`;
-    }
-};
-
-// ==================== ABAS ====================
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        this.classList.add('active');
-        document.getElementById(this.dataset.tab).classList.add('active');
-        if (this.dataset.tab === 'dashboard') renderizarDashboard();
-        if (this.dataset.tab === 'historico') renderizarHistorico();
-    });
-});
-
-// ==================== PRÉ-PREENCHIMENTO ====================
-document.getElementById('combustivelAtualizar').addEventListener('change', function() {
-    const ultimo = dados.filter(d => d.combustivel === this.value).slice(-1)[0];
-    if (ultimo) {
-        document.getElementById('precoMedioAtualizar').value = ultimo.precoMedio;
-        document.getElementById('precoMinimoAtualizar').value = ultimo.precoMinimo;
+  try {
+    if (idSitioAtual) {
+      await updateDoc(doc(db, COLECAO_SITIOS, idSitioAtual), registro);
+      setStatus('✅ Sítio atualizado!', 'online');
     } else {
-        document.getElementById('precoMedioAtualizar').value = '';
-        document.getElementById('precoMinimoAtualizar').value = '';
+      registro.criadoEm = new Date().toISOString();
+      const ref = await addDoc(collection(db, COLECAO_SITIOS), registro);
+      idSitioAtual = ref.id;
+      setStatus('✅ Sítio salvo no Firebase!', 'online');
     }
+    document.getElementById('nomeSitio').value = '';
+  } catch (error) {
+    console.error('Erro ao salvar:', error);
+    setStatus('❌ Erro ao salvar: ' + error.message, 'offline');
+  }
+}
+
+async function carregarSitio(id) {
+  try {
+    const snap = await getDocs(collection(db, COLECAO_SITIOS));
+    let encontrado = null;
+    snap.forEach(d => { if (d.id === id) encontrado = { id: d.id, ...d.data() }; });
+    if (!encontrado) return;
+
+    larguraAtual = encontrado.largura;
+    alturaAtual = encontrado.altura;
+    grid = encontrado.grid;
+    ativo = encontrado.ativo;
+    document.getElementById('largura').value = larguraAtual;
+    document.getElementById('altura').value = alturaAtual;
+    document.getElementById('nomeSitio').value = encontrado.nome;
+    idSitioAtual = id;
+    render();
+    renderizarListaSitios();
+    setStatus(`📂 "${encontrado.nome}" carregado`, 'online');
+  } catch (error) {
+    console.error('Erro ao carregar:', error);
+    alert('Erro ao carregar sítio: ' + error.message);
+  }
+}
+
+async function deletarSitio(id, nome) {
+  if (!confirm(`Excluir o sítio "${nome}"?`)) return;
+  try {
+    await deleteDoc(doc(db, COLECAO_SITIOS, id));
+    if (idSitioAtual === id) {
+      idSitioAtual = null;
+      document.getElementById('nomeSitio').value = '';
+    }
+    setStatus('🗑️ Sítio excluído', 'online');
+  } catch (error) {
+    alert('Erro ao excluir: ' + error.message);
+  }
+}
+
+function renderizarListaSitios() {
+  const el = document.getElementById('listaSitios');
+  if (sitiosSalvos.length === 0) {
+    el.innerHTML = `<div style="text-align:center; padding:15px; font-size:0.8em; opacity:0.6;">Nenhum sítio salvo ainda.</div>`;
+    return;
+  }
+
+  el.innerHTML = sitiosSalvos.map(s => {
+    const data = s.atualizadoEm ? new Date(s.atualizadoEm).toLocaleDateString('pt-BR') : '—';
+    const ativoCls = s.id === idSitioAtual ? ' ativo' : '';
+    return `
+      <div class="item-sitio${ativoCls}" onclick="window.carregarSitio('${s.id}')">
+        <div>
+          <div class="nome">🏡 ${s.nome}</div>
+          <div class="data">${s.largura}×${s.altura}m • ${data}</div>
+        </div>
+        <button class="btn-del" onclick="event.stopPropagation(); window.deletarSitio('${s.id}', '${s.nome.replace(/'/g, "\\'")}')">🗑️</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function escutarSitios() {
+  setStatus('🔄 Conectando...', '');
+  const q = query(collection(db, COLECAO_SITIOS), orderBy('atualizadoEm', 'desc'));
+  onSnapshot(q, (snapshot) => {
+    sitiosSalvos = [];
+    snapshot.forEach(d => sitiosSalvos.push({ id: d.id, ...d.data() }));
+    renderizarListaSitios();
+    setStatus('✅ Conectado ao Firebase', 'online');
+  }, (error) => {
+    console.error('Erro na conexão:', error);
+    setStatus('❌ Sem conexão: ' + error.message, 'offline');
+  });
+}
+
+window.novoSitio = function() {
+  if (!confirm('Criar um novo sítio? O atual será descartado (se não foi salvo, perde).')) return;
+  idSitioAtual = null;
+  document.getElementById('nomeSitio').value = '';
+  document.getElementById('largura').value = 30;
+  document.getElementById('altura').value = 25;
+  grid = [];
+  ativo = [];
+  criarTerreno();
+  renderizarListaSitios();
+  setStatus('✨ Novo sítio em branco', 'online');
+};
+
+window.limparTudo = function() {
+  if (!confirm('Apagar tudo e voltar para grama?')) return;
+  grid = Array.from({length: alturaAtual}, () => Array(larguraAtual).fill('grama'));
+  render();
+};
+
+document.addEventListener('mouseup', () => pintando = false);
+document.addEventListener('contextmenu', e => {
+  if (e.target.closest('#terreno')) e.preventDefault();
 });
 
-// ==================== INICIALIZAÇÃO ====================
-document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR');
+window.carregarSitio = carregarSitio;
+window.deletarSitio = deletarSitio;
+window.salvarNoFirebase = salvarNoFirebase;
+window.criarTerreno = criarTerreno;
+window.marcarTudo = marcarTudo;
+window.desmarcarTudo = desmarcarTudo;
+window.render = render;
 
-carregarRegrasFirestore();
-carregarDadosFirestore();
-
-setTimeout(() => {
-    const event = new Event('change');
-    document.getElementById('combustivelAtualizar').dispatchEvent(event);
-}, 500);
-
+montarFerramentas();
+criarTerreno();
+escutarSitios();
 </script>
 </body>
 </html>
