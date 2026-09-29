@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <title>🏡 Planejador de Sítio Frutífero</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -218,6 +220,8 @@
   .btn-salvar { background: #27ae60; }
   .btn-limpar { background: #c0392b; }
   .btn-novo   { background: #f39c12; }
+  .btn-pdf    { background: #8e44ad; }
+  .btn-pdf:hover { background: #71368a; }
 
   .toggle-alcance {
     display: flex;
@@ -353,6 +357,11 @@
 
     <h2>📊 Resumo do Sítio</h2>
     <div id="estatisticas"></div>
+
+    <h2>📄 Exportar</h2>
+    <div class="acoes">
+      <button class="btn-pdf" onclick="exportarPDF()">📄 Baixar PDF</button>
+    </div>
 
     <h2>🗑️ Ações</h2>
     <div class="acoes">
@@ -673,7 +682,6 @@ function setStatus(texto, tipo) {
   statusEl.className = 'status-conexao' + (tipo ? ' ' + tipo : '');
 }
 
-// ==================== CONVERSÃO MATRIZ <-> STRING ====================
 function matrizParaString(matriz) {
   return matriz.map(linha => linha.join(',')).join('|');
 }
@@ -683,7 +691,6 @@ function stringParaMatriz(str, largura, altura, valorPadrao) {
     return Array.from({length: altura}, () => Array(largura).fill(valorPadrao));
   }
   const linhas = str.split('|').map(l => l.split(','));
-  // Garante dimensões corretas
   const resultado = [];
   for (let y = 0; y < altura; y++) {
     const linha = [];
@@ -695,7 +702,6 @@ function stringParaMatriz(str, largura, altura, valorPadrao) {
   return resultado;
 }
 
-// ==================== SALVAR ====================
 async function salvarNoFirebase() {
   const nome = document.getElementById('nomeSitio').value.trim();
   if (!nome) {
@@ -703,12 +709,33 @@ async function salvarNoFirebase() {
     return;
   }
 
+  let gridStr, ativoStr;
+  try {
+    gridStr = grid.map(linha => {
+      if (!Array.isArray(linha)) throw new Error('Linha do grid não é array');
+      return linha.join(',');
+    }).join('|');
+
+    ativoStr = ativo.map(linha => {
+      if (!Array.isArray(linha)) throw new Error('Linha do ativo não é array');
+      return linha.map(v => v ? '1' : '0').join(',');
+    }).join('|');
+
+    if (typeof gridStr !== 'string' || typeof ativoStr !== 'string') {
+      throw new Error('Conversão falhou');
+    }
+  } catch (e) {
+    console.error('Erro na conversão:', e);
+    setStatus('❌ Erro de conversão: ' + e.message, 'offline');
+    return;
+  }
+
   const registro = {
-    nome: nome,
-    largura: larguraAtual,
-    altura: alturaAtual,
-    grid: matrizParaString(grid),
-    ativo: matrizParaString(ativo.map(l => l.map(v => v ? '1' : '0'))),
+    nome: String(nome),
+    largura: Number(larguraAtual),
+    altura: Number(alturaAtual),
+    grid: String(gridStr),
+    ativo: String(ativoStr),
     atualizadoEm: new Date().toISOString()
   };
 
@@ -729,7 +756,6 @@ async function salvarNoFirebase() {
   }
 }
 
-// ==================== CARREGAR ====================
 async function carregarSitio(id) {
   try {
     const snap = await getDocs(collection(db, COLECAO_SITIOS));
@@ -757,7 +783,6 @@ async function carregarSitio(id) {
   }
 }
 
-// ==================== DELETAR ====================
 async function deletarSitio(id, nome) {
   if (!confirm(`Excluir o sítio "${nome}"?`)) return;
   try {
@@ -807,6 +832,136 @@ function escutarSitios() {
     setStatus('❌ Sem conexão: ' + error.message, 'offline');
   });
 }
+
+// ==================== EXPORTAR PDF ====================
+window.exportarPDF = async function() {
+  const nomeSitio = document.getElementById('nomeSitio').value.trim() || 'Sitio sem nome';
+  const statsTexto = document.getElementById('estatisticas').innerText;
+
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.left = '-9999px';
+  container.style.top = '0';
+  container.style.width = '1000px';
+  container.style.background = '#ffffff';
+  container.style.color = '#222';
+  container.style.padding = '30px';
+  container.style.fontFamily = 'Segoe UI, sans-serif';
+
+  const terrenoOriginal = document.getElementById('terreno');
+  const terrenoClone = terrenoOriginal.cloneNode(true);
+
+  const header = document.createElement('div');
+  header.style.borderBottom = '3px solid #2c3e50';
+  header.style.paddingBottom = '15px';
+  header.style.marginBottom = '20px';
+  header.innerHTML = `
+    <h1 style="color:#2c3e50; font-size:24px; margin:0;">🏡 ${nomeSitio}</h1>
+    <div style="color:#666; font-size:13px; margin-top:5px;">
+      Gerado em ${new Date().toLocaleString('pt-BR')} • ${larguraAtual}m × ${alturaAtual}m
+    </div>
+  `;
+  container.appendChild(header);
+
+  const terrenoWrapper = document.createElement('div');
+  terrenoWrapper.style.marginBottom = '25px';
+  terrenoWrapper.style.background = '#1e2b38';
+  terrenoWrapper.style.padding = '10px';
+  terrenoWrapper.style.borderRadius = '8px';
+  terrenoWrapper.style.display = 'inline-block';
+  terrenoWrapper.appendChild(terrenoClone);
+  container.appendChild(terrenoWrapper);
+
+  const statsDiv = document.createElement('div');
+  statsDiv.style.background = '#f5f5f5';
+  statsDiv.style.padding = '20px';
+  statsDiv.style.borderRadius = '8px';
+  statsDiv.style.fontSize = '14px';
+  statsDiv.style.lineHeight = '1.8';
+  statsDiv.style.whiteSpace = 'pre-line';
+  statsDiv.style.borderLeft = '5px solid #2c3e50';
+  statsDiv.innerHTML = `<strong style="color:#2c3e50;">📊 Resumo do Sítio</strong>\n\n${statsTexto}`;
+  container.appendChild(statsDiv);
+
+  const legenda = document.createElement('div');
+  legenda.style.marginTop = '20px';
+  legenda.style.padding = '15px';
+  legenda.style.background = '#fff9e6';
+  legenda.style.borderRadius = '8px';
+  legenda.style.fontSize = '12px';
+  legenda.style.borderLeft = '5px solid #f1c40f';
+  legenda.innerHTML = `
+    <strong style="color:#333;">🔑 Legenda</strong><br>
+    <span style="display:inline-block; margin:4px 8px;">🟩 Grama</span>
+    <span style="display:inline-block; margin:4px 8px;">🟫 Terra</span>
+    <span style="display:inline-block; margin:4px 8px;">💧 Água</span>
+    <span style="display:inline-block; margin:4px 8px;">🛤️ Caminho</span>
+    <span style="display:inline-block; margin:4px 8px;">🏠 Casa</span>
+    <span style="display:inline-block; margin:4px 8px;">🚰 Poço</span>
+    <span style="display:inline-block; margin:4px 8px;">🚿 Mangueira</span>
+    <span style="display:inline-block; margin:4px 8px;">🌳 Frutíferas</span>
+  `;
+  container.appendChild(legenda);
+
+  document.body.appendChild(container);
+
+  try {
+    setStatus('📄 Gerando PDF...', '');
+    const canvas = await html2canvas(container, {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      logging: false
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfLargura = pdf.internal.pageSize.getWidth();
+    const pdfAltura = pdf.internal.pageSize.getHeight();
+
+    const ratio = canvas.width / canvas.height;
+    const larguraUsada = pdfLargura - 20;
+    const alturaUsada = larguraUsada / ratio;
+
+    if (alturaUsada <= pdfAltura - 20) {
+      pdf.addImage(imgData, 'PNG', 10, 10, larguraUsada, alturaUsada);
+    } else {
+      const alturaPaginaDisponivel = pdfAltura - 20;
+      const proporcaoPagina = alturaPaginaDisponivel / alturaUsada;
+      let restanteY = 0;
+      let primeira = true;
+      while (restanteY < 1) {
+        const canvasTemp = document.createElement('canvas');
+        canvasTemp.width = canvas.width;
+        canvasTemp.height = canvas.height * proporcaoPagina;
+        const ctx = canvasTemp.getContext('2d');
+        ctx.drawImage(
+          canvas,
+          0, canvas.height * restanteY,
+          canvas.width, canvas.height * proporcaoPagina,
+          0, 0,
+          canvas.width, canvas.height * proporcaoPagina
+        );
+        const parteImg = canvasTemp.toDataURL('image/png');
+        if (!primeira) pdf.addPage();
+        pdf.addImage(parteImg, 'PNG', 10, 10, larguraUsada, alturaPaginaDisponivel);
+        primeira = false;
+        restanteY += proporcaoPagina;
+      }
+    }
+
+    const nomeArquivo = nomeSitio.replace(/[^a-zA-Z0-9]/g, '_') + '.pdf';
+    pdf.save(nomeArquivo);
+    setStatus('📄 PDF exportado!', 'online');
+  } catch (erro) {
+    console.error('Erro ao gerar PDF:', erro);
+    alert('Erro ao gerar PDF: ' + erro.message);
+    setStatus('❌ Erro no PDF', 'offline');
+  } finally {
+    document.body.removeChild(container);
+  }
+};
 
 window.novoSitio = function() {
   if (!confirm('Criar um novo sítio? O atual será descartado (se não foi salvo, perde).')) return;
