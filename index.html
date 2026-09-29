@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>🏡 Planejador de Sítio Frutífero</title>
+<title>🏡 Planejador de Sítio e Casa</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -135,17 +135,21 @@
     opacity: 0.35;
   }
 
+  /* Terreno */
   .celula.grama   { background: #7cb342; }
   .celula.terra   { background: #8d6e63; }
   .celula.agua    { background: #42a5f5; }
   .celula.areia   { background: #fdd835; }
   .celula.pedra   { background: #9e9e9e; }
   .celula.caminho { background: #bcaaa4; }
+
+  /* Estruturas */
   .celula.casa    { background: #e57373; font-size: 20px; }
   .celula.horta   { background: #a1887f; font-size: 15px; }
   .celula.poco    { background: #90a4ae; font-size: 16px; }
   .celula.galpao  { background: #a1887f; font-size: 16px; }
 
+  /* Frutíferas */
   .celula.acerola  { background: #ff5252; }
   .celula.manga    { background: #ffb300; }
   .celula.goiaba   { background: #e57373; }
@@ -153,6 +157,7 @@
   .celula.cupuacu  { background: #8d6e63; }
   .celula.graviola { background: #66bb6a; }
 
+  /* Irrigação */
   .celula.mangueira::after {
     content: '';
     position: absolute;
@@ -163,23 +168,76 @@
     z-index: 2;
     pointer-events: none;
   }
-  .celula.mangueira.irriga-h::before {
-    content: '';
-    position: absolute;
-    top: 45%; left: 0; right: 0;
-    height: 10%;
-    background: #00bcd4;
-    box-shadow: 0 0 6px #00e5ff;
-    z-index: 1;
-    pointer-events: none;
+
+  /* ===== CONSTRUÇÃO ===== */
+  .celula.parede {
+    background: #e0e0e0;
   }
-  .celula.mangueira.irriga-v::before {
+  .celula.parede::after {
     content: '';
     position: absolute;
-    left: 45%; top: 0; bottom: 0;
-    width: 10%;
-    background: #00bcd4;
-    box-shadow: 0 0 6px #00e5ff;
+    inset: 0;
+    background: #222;
+    z-index: 1;
+  }
+
+  .celula.divisoria {
+    background: #e0e0e0;
+  }
+  .celula.divisoria::after {
+    content: '';
+    position: absolute;
+    left: 40%;
+    right: 40%;
+    top: 40%;
+    bottom: 40%;
+    background: #444;
+    z-index: 1;
+  }
+
+  .celula.porta {
+    background: #e0e0e0;
+  }
+  .celula.porta::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      #222 0, #222 2px,
+      #8d6e63 2px, #8d6e63 6px
+    );
+    z-index: 1;
+  }
+
+  .celula.janela {
+    background: #e0e0e0;
+  }
+  .celula.janela::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: #222;
+    z-index: 1;
+  }
+  .celula.janela::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    top: 40%; bottom: 40%;
+    background: #4fc3f7;
+    box-shadow: 0 0 4px #29b6f6;
+    z-index: 2;
+  }
+
+  .celula.piso {
+    background: #cfd8dc;
+  }
+  .celula.piso::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border: 1px dashed #90a4ae;
     z-index: 1;
     pointer-events: none;
   }
@@ -293,32 +351,82 @@
     outline: none;
     border-color: #f1c40f;
   }
+
+  /* Modo: Sítio ou Casa */
+  .modo-selector {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    background: #2c3e50;
+    padding: 4px;
+    border-radius: 8px;
+  }
+  .modo-btn {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.8em;
+    background: transparent;
+    color: #95a5a6;
+    transition: 0.15s;
+  }
+  .modo-btn.ativo {
+    background: #27ae60;
+    color: white;
+  }
 </style>
 </head>
 <body>
-<h1>🏡 Planejador de Sítio Frutífero</h1>
+<h1>🏡 Planejador de Sítio e Casa</h1>
 
 <div class="app">
 
   <div class="painel">
-    <h2>📐 Área do Sítio</h2>
-    <div id="ferramentasArea"></div>
+    <!-- Seletor de modo -->
+    <div class="modo-selector">
+      <button class="modo-btn ativo" onclick="mudarModo('sitio')" id="modoSitioBtn">🌳 Sítio</button>
+      <button class="modo-btn" onclick="mudarModo('casa')" id="modoCasaBtn">🏠 Casa</button>
+    </div>
 
-    <h2>🧰 Terreno</h2>
-    <div id="ferramentasTerreno"></div>
+    <!-- Modo SÍTIO -->
+    <div id="modoSitio" style="display:block;">
+      <h2>📐 Área do Sítio</h2>
+      <div id="ferramentasArea"></div>
 
-    <h2>🏠 Estruturas</h2>
-    <div id="ferramentasEstruturas"></div>
+      <h2>🧰 Terreno</h2>
+      <div id="ferramentasTerreno"></div>
 
-    <h2>💧 Irrigação</h2>
-    <div id="ferramentasIrrigacao"></div>
-    <label class="toggle-alcance">
-      <input type="checkbox" id="mostrarAlcance" onchange="render()">
-      Mostrar alcance da mangueira
-    </label>
+      <h2>🏠 Estruturas</h2>
+      <div id="ferramentasEstruturas"></div>
 
-    <h2>🌳 Frutíferas</h2>
-    <div id="ferramentasFrutas"></div>
+      <h2>💧 Irrigação</h2>
+      <div id="ferramentasIrrigacao"></div>
+      <label class="toggle-alcance">
+        <input type="checkbox" id="mostrarAlcance" onchange="render()">
+        Mostrar alcance da mangueira
+      </label>
+
+      <h2>🌳 Frutíferas</h2>
+      <div id="ferramentasFrutas"></div>
+    </div>
+
+    <!-- Modo CASA -->
+    <div id="modoCasa" style="display:none;">
+      <h2>📐 Área da Casa</h2>
+      <div id="ferramentasAreaCasa"></div>
+
+      <h2>🧱 Construção</h2>
+      <div id="ferramentasConstrucao"></div>
+
+      <h2>🛋️ Ambientes</h2>
+      <div id="ferramentasAmbientes"></div>
+
+      <h2>🏡 Externo</h2>
+      <div id="ferramentasExterno"></div>
+    </div>
   </div>
 
   <div class="terreno-wrap">
@@ -326,15 +434,15 @@
     <div class="dica">
       💡 Clique ou arraste para pintar<br>
       🖱️ Botão direito apaga • 1 célula ≈ 1 m²<br>
-      ✏️ <b>Marcar área</b> define o formato do sítio
+      ✏️ <b>Marcar área</b> define o formato
     </div>
   </div>
 
   <div class="painel">
     <div id="statusConexao" class="status-conexao">🔄 Conectando ao Firebase...</div>
 
-    <h2>💾 Meus Sítios</h2>
-    <input type="text" id="nomeSitio" class="campo-nome" placeholder="Nome do sítio">
+    <h2>💾 Meus Projetos</h2>
+    <input type="text" id="nomeSitio" class="campo-nome" placeholder="Nome do projeto">
     <div class="acoes">
       <button class="btn-salvar" onclick="salvarNoFirebase()">💾 Salvar</button>
       <button class="btn-novo" onclick="novoSitio()">✨ Novo</button>
@@ -354,7 +462,7 @@
       <button onclick="desmarcarTudo()" style="background:#c0392b;">🚫 Desmarcar tudo</button>
     </div>
 
-    <h2>📊 Resumo do Sítio</h2>
+    <h2>📊 Resumo</h2>
     <div id="estatisticas"></div>
 
     <h2>📄 Exportar</h2>
@@ -400,28 +508,63 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const COLECAO_SITIOS = 'sitios';
 
+// ============================================================
+//  FERRAMENTAS
+// ============================================================
 const FERRAMENTAS = [
+  // ===== ÁREA (comum a ambos os modos) =====
   { id: 'marcar',    nome: 'Marcar área',    icone: '✏️', classe: 'grama', grupo: 'area', acao: 'marcar' },
   { id: 'desmarcar', nome: 'Desmarcar',      icone: '🚫', classe: 'grama', grupo: 'area', acao: 'desmarcar' },
-  { id: 'grama',   nome: 'Grama',       icone: '🟩', classe: 'grama',   grupo: 'terreno', emoji: '' },
-  { id: 'terra',   nome: 'Terra',       icone: '🟫', classe: 'terra',   grupo: 'terreno', emoji: '' },
-  { id: 'agua',    nome: 'Lago/Água',   icone: '💧', classe: 'agua',    grupo: 'terreno', emoji: '' },
-  { id: 'caminho', nome: 'Caminho',     icone: '🛤️', classe: 'caminho', grupo: 'terreno', emoji: '' },
-  { id: 'areia',   nome: 'Areia',       icone: '🟨', classe: 'areia',   grupo: 'terreno', emoji: '' },
-  { id: 'pedra',   nome: 'Pedra',       icone: '⬜', classe: 'pedra',   grupo: 'terreno', emoji: '' },
-  { id: 'casa',    nome: 'Casa',        icone: '🏠', classe: 'casa',    grupo: 'estrutura', emoji: '🏠' },
-  { id: 'horta',   nome: 'Horta',       icone: '🥬', classe: 'horta',   grupo: 'estrutura', emoji: '🥬' },
-  { id: 'poco',    nome: 'Poço/Caixa',  icone: '🚰', classe: 'poco',    grupo: 'estrutura', emoji: '🚰' },
-  { id: 'galpao',  nome: 'Galpão',      icone: '🏚️', classe: 'galpao',  grupo: 'estrutura', emoji: '🏚️' },
-  { id: 'mangueira', nome: 'Mangueira', icone: '🚿', classe: 'mangueira', grupo: 'irrigacao', emoji: '' },
-  { id: 'acerola',  nome: 'Acerola',   icone: '🔴', classe: 'acerola',  grupo: 'fruta', emoji: '🌳', espacamento: 3, producao: 20 },
-  { id: 'manga',    nome: 'Manga',     icone: '🥭', classe: 'manga',    grupo: 'fruta', emoji: '🥭', espacamento: 8, producao: 100 },
-  { id: 'goiaba',   nome: 'Goiaba',    icone: '🍈', classe: 'goiaba',   grupo: 'fruta', emoji: '🍈', espacamento: 5, producao: 60 },
-  { id: 'maracuja', nome: 'Maracujá',  icone: '🟡', classe: 'maracuja', grupo: 'fruta', emoji: '🟡', espacamento: 3, producao: 40 },
-  { id: 'cupuacu',  nome: 'Cupuaçu',   icone: '🟤', classe: 'cupuacu',  grupo: 'fruta', emoji: '🟤', espacamento: 6, producao: 50 },
-  { id: 'graviola', nome: 'Graviola',  icone: '🟢', classe: 'graviola', grupo: 'fruta', emoji: '🍏', espacamento: 6, producao: 70 },
+
+  // ===== TERRENO (modo sítio) =====
+  { id: 'grama',   nome: 'Grama',       icone: '🟩', classe: 'grama',   grupo: 'terreno', emoji: '', modo: 'sitio' },
+  { id: 'terra',   nome: 'Terra',       icone: '🟫', classe: 'terra',   grupo: 'terreno', emoji: '', modo: 'sitio' },
+  { id: 'agua',    nome: 'Lago/Água',   icone: '💧', classe: 'agua',    grupo: 'terreno', emoji: '', modo: 'sitio' },
+  { id: 'caminho', nome: 'Caminho',     icone: '🛤️', classe: 'caminho', grupo: 'terreno', emoji: '', modo: 'sitio' },
+  { id: 'areia',   nome: 'Areia',       icone: '🟨', classe: 'areia',   grupo: 'terreno', emoji: '', modo: 'sitio' },
+  { id: 'pedra',   nome: 'Pedra',       icone: '⬜', classe: 'pedra',   grupo: 'terreno', emoji: '', modo: 'sitio' },
+
+  // ===== ESTRUTURAS (modo sítio) =====
+  { id: 'casa',    nome: 'Casa',        icone: '🏠', classe: 'casa',    grupo: 'estrutura', emoji: '🏠', modo: 'sitio' },
+  { id: 'horta',   nome: 'Horta',       icone: '🥬', classe: 'horta',   grupo: 'estrutura', emoji: '🥬', modo: 'sitio' },
+  { id: 'poco',    nome: 'Poço/Caixa',  icone: '🚰', classe: 'poco',    grupo: 'estrutura', emoji: '🚰', modo: 'sitio' },
+  { id: 'galpao',  nome: 'Galpão',      icone: '🏚️', classe: 'galpao',  grupo: 'estrutura', emoji: '🏚️', modo: 'sitio' },
+
+  // ===== IRRIGAÇÃO (modo sítio) =====
+  { id: 'mangueira', nome: 'Mangueira', icone: '🚿', classe: 'mangueira', grupo: 'irrigacao', emoji: '', modo: 'sitio' },
+
+  // ===== FRUTÍFERAS (modo sítio) =====
+  { id: 'acerola',  nome: 'Acerola',   icone: '🔴', classe: 'acerola',  grupo: 'fruta', emoji: '🌳', espacamento: 3, producao: 20, modo: 'sitio' },
+  { id: 'manga',    nome: 'Manga',     icone: '🥭', classe: 'manga',    grupo: 'fruta', emoji: '🥭', espacamento: 8, producao: 100, modo: 'sitio' },
+  { id: 'goiaba',   nome: 'Goiaba',    icone: '🍈', classe: 'goiaba',   grupo: 'fruta', emoji: '🍈', espacamento: 5, producao: 60, modo: 'sitio' },
+  { id: 'maracuja', nome: 'Maracujá',  icone: '🟡', classe: 'maracuja', grupo: 'fruta', emoji: '🟡', espacamento: 3, producao: 40, modo: 'sitio' },
+  { id: 'cupuacu',  nome: 'Cupuaçu',   icone: '🟤', classe: 'cupuacu',  grupo: 'fruta', emoji: '🟤', espacamento: 6, producao: 50, modo: 'sitio' },
+  { id: 'graviola', nome: 'Graviola',  icone: '🟢', classe: 'graviola', grupo: 'fruta', emoji: '🍏', espacamento: 6, producao: 70, modo: 'sitio' },
+
+  // ===== CONSTRUÇÃO (modo casa) =====
+  { id: 'parede',    nome: 'Parede',      icone: '🧱', classe: 'parede',    grupo: 'construcao', emoji: '', modo: 'casa' },
+  { id: 'divisoria', nome: 'Divisória',   icone: '▫️', classe: 'divisoria', grupo: 'construcao', emoji: '', modo: 'casa' },
+  { id: 'porta',     nome: 'Porta',       icone: '🚪', classe: 'porta',     grupo: 'construcao', emoji: '', modo: 'casa' },
+  { id: 'janela',    nome: 'Janela',      icone: '🪟', classe: 'janela',    grupo: 'construcao', emoji: '', modo: 'casa' },
+  { id: 'piso',      nome: 'Piso',        icone: '⬜', classe: 'piso',      grupo: 'construcao', emoji: '', modo: 'casa' },
+
+  // ===== AMBIENTES (modo casa) =====
+  { id: 'piso_sala',    nome: 'Sala',       icone: '🛋️', classe: 'piso', grupo: 'ambiente', emoji: '🛋️', corAmbiente: true, modo: 'casa' },
+  { id: 'piso_quarto',  nome: 'Quarto',     icone: '🛏️', classe: 'piso', grupo: 'ambiente', emoji: '🛏️', corAmbiente: true, modo: 'casa' },
+  { id: 'piso_cozinha', nome: 'Cozinha',    icone: '🍳', classe: 'piso', grupo: 'ambiente', emoji: '🍳', corAmbiente: true, modo: 'casa' },
+  { id: 'piso_banheiro',nome: 'Banheiro',   icone: '🚽', classe: 'piso', grupo: 'ambiente', emoji: '🚽', corAmbiente: true, modo: 'casa' },
+  { id: 'piso_area',    nome: 'Área serviço', icone: '🧺', classe: 'piso', grupo: 'ambiente', emoji: '🧺', corAmbiente: true, modo: 'casa' },
+
+  // ===== EXTERNO (modo casa) =====
+  { id: 'grama_casa',   nome: 'Grama',      icone: '🟩', classe: 'grama',   grupo: 'externo', emoji: '', modo: 'casa' },
+  { id: 'terra_casa',   nome: 'Terra',      icone: '🟫', classe: 'terra',   grupo: 'externo', emoji: '', modo: 'casa' },
+  { id: 'caminho_casa', nome: 'Caminho',    icone: '🛤️', classe: 'caminho', grupo: 'externo', emoji: '', modo: 'casa' },
+  { id: 'piscina',      nome: 'Piscina',    icone: '🏊', classe: 'agua',    grupo: 'externo', emoji: '🏊', modo: 'casa' },
+  { id: 'jardim',       nome: 'Jardim',     icone: '🌷', classe: 'grama',   grupo: 'externo', emoji: '🌷', modo: 'casa' },
+  { id: 'arvore_casa',  nome: 'Árvore',     icone: '🌳', classe: 'grama',   grupo: 'externo', emoji: '🌳', modo: 'casa' },
 ];
 
+let modoAtual = 'sitio'; // 'sitio' ou 'casa'
 let ferramentaAtual = 'marcar';
 let grid = [];
 let ativo = [];
@@ -432,19 +575,51 @@ let mostrarAlcance = false;
 let sitiosSalvos = [];
 let idSitioAtual = null;
 
+// ============================================================
+//  MODO SÍTIO / CASA
+// ============================================================
+window.mudarModo = function(novoModo) {
+  modoAtual = novoModo;
+  document.getElementById('modoSitio').style.display = novoModo === 'sitio' ? 'block' : 'none';
+  document.getElementById('modoCasa').style.display = novoModo === 'casa' ? 'block' : 'none';
+  document.getElementById('modoSitioBtn').classList.toggle('ativo', novoModo === 'sitio');
+  document.getElementById('modoCasaBtn').classList.toggle('ativo', novoModo === 'casa');
+  // Reseta ferramenta para 'marcar'
+  ferramentaAtual = 'marcar';
+  montarFerramentas();
+};
+
 function montarFerramentas() {
   const grupos = {
-    area:      'ferramentasArea',
-    terreno:   'ferramentasTerreno',
-    estrutura: 'ferramentasEstruturas',
-    irrigacao: 'ferramentasIrrigacao',
-    fruta:     'ferramentasFrutas',
+    // Modo sítio
+    area:          'ferramentasArea',
+    terreno:       'ferramentasTerreno',
+    estrutura:     'ferramentasEstruturas',
+    irrigacao:     'ferramentasIrrigacao',
+    fruta:         'ferramentasFrutas',
+    // Modo casa
+    areaCasa:      'ferramentasAreaCasa',
+    construcao:    'ferramentasConstrucao',
+    ambiente:      'ferramentasAmbientes',
+    externo:       'ferramentasExterno',
   };
 
   Object.entries(grupos).forEach(([grupo, containerId]) => {
     const el = document.getElementById(containerId);
+    if (!el) return;
     el.innerHTML = '';
-    FERRAMENTAS.filter(f => f.grupo === grupo).forEach(f => {
+
+    // Ferramentas do grupo (comuns + do modo atual)
+    let lista = [];
+    if (grupo === 'area') {
+      lista = FERRAMENTAS.filter(f => f.grupo === 'area');
+    } else if (grupo === 'areaCasa') {
+      lista = FERRAMENTAS.filter(f => f.grupo === 'area');
+    } else {
+      lista = FERRAMENTAS.filter(f => f.grupo === grupo && f.modo === modoAtual);
+    }
+
+    lista.forEach(f => {
       const div = document.createElement('div');
       div.className = 'ferramenta' + (f.id === ferramentaAtual ? ' ativa' : '');
       const extra = f.espacamento ? ` <span style="opacity:.5">~${f.espacamento}m</span>` : '';
@@ -458,6 +633,9 @@ function montarFerramentas() {
   });
 }
 
+// ============================================================
+//  TERRENO
+// ============================================================
 function criarTerreno() {
   larguraAtual = Math.max(5, Math.min(80, +document.getElementById('largura').value || 30));
   alturaAtual  = Math.max(5, Math.min(80, +document.getElementById('altura').value || 25));
@@ -494,7 +672,7 @@ function desmarcarTudo() {
 }
 
 function render() {
-  mostrarAlcance = document.getElementById('mostrarAlcance').checked;
+  mostrarAlcance = document.getElementById('mostrarAlcance')?.checked || false;
   const terr = document.getElementById('terreno');
   terr.style.gridTemplateColumns = `repeat(${larguraAtual}, 26px)`;
   terr.innerHTML = '';
@@ -517,13 +695,13 @@ function render() {
     for (let x = 0; x < larguraAtual; x++) {
       const cel = document.createElement('div');
       const tipoId = grid[y][x];
-      const f = FERRAMENTAS.find(t => t.id === tipoId) || FERRAMENTAS[0];
-      cel.className = 'celula ' + f.classe;
+      const f = FERRAMENTAS.find(t => t.id === tipoId) || FERRAMENTAS.find(t => t.id === 'grama');
+      cel.className = 'celula ' + (f ? f.classe : 'grama');
       if (!ativo[y][x]) cel.classList.add('fora');
       if (mostrarAlcance && alcance.has(y * larguraAtual + x) && tipoId !== 'mangueira')
         cel.classList.add('alcance');
-      if (f.emoji) cel.textContent = f.emoji;
-      cel.title = f.nome;
+      if (f && f.emoji) cel.textContent = f.emoji;
+      cel.title = f ? f.nome : '';
 
       if (tipoId === 'mangueira') {
         const viz = (nx, ny) => nx>=0 && nx<larguraAtual && ny>=0 && ny<alturaAtual && grid[ny][nx] === 'mangueira';
@@ -587,44 +765,16 @@ function atualizarCelulaDOM(x, y) {
   if (!cel) return;
 
   const tipoId = grid[y][x];
-  const f = FERRAMENTAS.find(t => t.id === tipoId) || FERRAMENTAS[0];
-  cel.className = 'celula ' + f.classe;
+  const f = FERRAMENTAS.find(t => t.id === tipoId) || FERRAMENTAS.find(t => t.id === 'grama');
+  cel.className = 'celula ' + (f ? f.classe : 'grama');
   if (!ativo[y][x]) cel.classList.add('fora');
-  cel.textContent = f.emoji || '';
-  cel.title = f.nome;
-
-  const redesenhar = (cx, cy) => {
-    if (cx<0||cx>=larguraAtual||cy<0||cy>=alturaAtual) return;
-    const idc = cy * larguraAtual + cx;
-    const c = terr.children[idc];
-    if (!c) return;
-    const tp = grid[cy][cx];
-    const ff = FERRAMENTAS.find(t => t.id === tp) || FERRAMENTAS[0];
-    c.className = 'celula ' + ff.classe;
-    if (!ativo[cy][cx]) c.classList.add('fora');
-    if (mostrarAlcance) {
-      for (let dy=-2; dy<=2; dy++) for (let dx=-2; dx<=2; dx++) {
-        const ny=cy+dy, nx=cx+dx;
-        if (ny>=0&&ny<alturaAtual&&nx>=0&&nx<larguraAtual&&grid[ny][nx]==='mangueira'&&!(dy===0&&dx===0)) {
-          if (tp !== 'mangueira') c.classList.add('alcance');
-        }
-      }
-    }
-    c.textContent = ff.emoji || '';
-    c.title = ff.nome;
-    if (tp === 'mangueira') {
-      const viz = (nx, ny) => nx>=0 && nx<larguraAtual && ny>=0 && ny<alturaAtual && grid[ny][nx] === 'mangueira';
-      const e = viz(cx-1,cy), d = viz(cx+1,cy), cc = viz(cx,cy-1), b = viz(cx,cy+1);
-      if ((e && d) || (!e && !d)) c.classList.add('irriga-h');
-      if ((cc && b) || (!cc && !b)) c.classList.add('irriga-v');
-    }
-  };
-
-  redesenhar(x, y);
-  redesenhar(x-1, y); redesenhar(x+1, y);
-  redesenhar(x, y-1); redesenhar(x, y+1);
+  cel.textContent = (f && f.emoji) ? f.emoji : '';
+  cel.title = f ? f.nome : '';
 }
 
+// ============================================================
+//  ESTATÍSTICAS
+// ============================================================
 function atualizarEstatisticas() {
   const contagem = {};
   let areaAtiva = 0;
@@ -636,9 +786,10 @@ function atualizarEstatisticas() {
     }
 
   const totalGrade = larguraAtual * alturaAtual;
-  let html = `<div class="estatistica"><span>📐 Área do sítio</span><b>${areaAtiva} m²</b></div>`;
+  let html = `<div class="estatistica"><span>📐 Área ativa</span><b>${areaAtiva} m²</b></div>`;
   html += `<div class="estatistica"><span>🗺️ Grade total</span><b>${totalGrade} m²</b></div>`;
 
+  // ===== Frutíferas =====
   const frutas = FERRAMENTAS.filter(f => f.grupo === 'fruta');
   const temFruta = frutas.some(f => (contagem[f.id] || 0) > 0);
   if (temFruta) {
@@ -656,6 +807,7 @@ function atualizarEstatisticas() {
       <span>🌾 Produção estimada/ano</span><b>~${totalProducao} kg</b></div>`;
   }
 
+  // ===== Estruturas =====
   const estruturas = FERRAMENTAS.filter(f => f.grupo === 'estrutura');
   if (estruturas.some(f => (contagem[f.id] || 0) > 0)) {
     html += `<div style="margin-top:8px; font-size:.75em; color:#f1c40f; font-weight:bold;">🏠 ESTRUTURAS</div>`;
@@ -665,6 +817,36 @@ function atualizarEstatisticas() {
     });
   }
 
+  // ===== Construção (paredes, portas, janelas, piso) =====
+  const qtdParede = (contagem['parede'] || 0) + (contagem['divisoria'] || 0);
+  const qtdPorta = contagem['porta'] || 0;
+  const qtdJanela = contagem['janela'] || 0;
+  const qtdPiso = (contagem['piso'] || 0) +
+                  (contagem['piso_sala'] || 0) +
+                  (contagem['piso_quarto'] || 0) +
+                  (contagem['piso_cozinha'] || 0) +
+                  (contagem['piso_banheiro'] || 0) +
+                  (contagem['piso_area'] || 0);
+
+  if (qtdParede + qtdPorta + qtdJanela + qtdPiso > 0) {
+    html += `<div style="margin-top:8px; font-size:.75em; color:#f1c40f; font-weight:bold;">🧱 CONSTRUÇÃO</div>`;
+    if (qtdParede > 0) html += `<div class="estatistica"><span>🧱 Paredes</span><b>${qtdParede} m</b></div>`;
+    if (qtdPorta > 0)  html += `<div class="estatistica"><span>🚪 Portas</span><b>${qtdPorta}</b></div>`;
+    if (qtdJanela > 0) html += `<div class="estatistica"><span>🪟 Janelas</span><b>${qtdJanela}</b></div>`;
+    if (qtdPiso > 0)   html += `<div class="estatistica"><span>⬜ Piso total</span><b>${qtdPiso} m²</b></div>`;
+  }
+
+  // ===== Ambientes (casa) =====
+  const ambientes = FERRAMENTAS.filter(f => f.grupo === 'ambiente');
+  if (ambientes.some(f => (contagem[f.id] || 0) > 0)) {
+    html += `<div style="margin-top:8px; font-size:.75em; color:#f1c40f; font-weight:bold;">🛋️ AMBIENTES</div>`;
+    ambientes.forEach(f => {
+      const qtd = contagem[f.id] || 0;
+      if (qtd > 0) html += `<div class="estatistica"><span>${f.icone} ${f.nome}</span><b>${qtd} m²</b></div>`;
+    });
+  }
+
+  // ===== Irrigação =====
   const qtdMang = contagem['mangueira'] || 0;
   if (qtdMang > 0) {
     html += `<div style="margin-top:8px; font-size:.75em; color:#f1c40f; font-weight:bold;">💧 IRRIGAÇÃO</div>`;
@@ -674,6 +856,9 @@ function atualizarEstatisticas() {
   document.getElementById('estatisticas').innerHTML = html;
 }
 
+// ============================================================
+//  FIREBASE
+// ============================================================
 const statusEl = document.getElementById('statusConexao');
 
 function setStatus(texto, tipo) {
@@ -704,27 +889,15 @@ function stringParaMatriz(str, largura, altura, valorPadrao) {
 async function salvarNoFirebase() {
   const nome = document.getElementById('nomeSitio').value.trim();
   if (!nome) {
-    alert('⚠️ Digite um nome para o sítio antes de salvar.');
+    alert('⚠️ Digite um nome para o projeto antes de salvar.');
     return;
   }
 
   let gridStr, ativoStr;
   try {
-    gridStr = grid.map(linha => {
-      if (!Array.isArray(linha)) throw new Error('Linha do grid não é array');
-      return linha.join(',');
-    }).join('|');
-
-    ativoStr = ativo.map(linha => {
-      if (!Array.isArray(linha)) throw new Error('Linha do ativo não é array');
-      return linha.map(v => v ? '1' : '0').join(',');
-    }).join('|');
-
-    if (typeof gridStr !== 'string' || typeof ativoStr !== 'string') {
-      throw new Error('Conversão falhou');
-    }
+    gridStr = grid.map(linha => linha.join(',')).join('|');
+    ativoStr = ativo.map(linha => linha.map(v => v ? '1' : '0').join(',')).join('|');
   } catch (e) {
-    console.error('Erro na conversão:', e);
     setStatus('❌ Erro de conversão: ' + e.message, 'offline');
     return;
   }
@@ -735,18 +908,19 @@ async function salvarNoFirebase() {
     altura: Number(alturaAtual),
     grid: String(gridStr),
     ativo: String(ativoStr),
+    modo: modoAtual,
     atualizadoEm: new Date().toISOString()
   };
 
   try {
     if (idSitioAtual) {
       await updateDoc(doc(db, COLECAO_SITIOS, idSitioAtual), registro);
-      setStatus('✅ Sítio atualizado!', 'online');
+      setStatus('✅ Projeto atualizado!', 'online');
     } else {
       registro.criadoEm = new Date().toISOString();
       const ref = await addDoc(collection(db, COLECAO_SITIOS), registro);
       idSitioAtual = ref.id;
-      setStatus('✅ Sítio salvo no Firebase!', 'online');
+      setStatus('✅ Projeto salvo no Firebase!', 'online');
     }
     document.getElementById('nomeSitio').value = '';
   } catch (error) {
@@ -778,19 +952,19 @@ async function carregarSitio(id) {
     setStatus(`📂 "${encontrado.nome}" carregado`, 'online');
   } catch (error) {
     console.error('Erro ao carregar:', error);
-    alert('Erro ao carregar sítio: ' + error.message);
+    alert('Erro ao carregar: ' + error.message);
   }
 }
 
 async function deletarSitio(id, nome) {
-  if (!confirm(`Excluir o sítio "${nome}"?`)) return;
+  if (!confirm(`Excluir o projeto "${nome}"?`)) return;
   try {
     await deleteDoc(doc(db, COLECAO_SITIOS, id));
     if (idSitioAtual === id) {
       idSitioAtual = null;
       document.getElementById('nomeSitio').value = '';
     }
-    setStatus('🗑️ Sítio excluído', 'online');
+    setStatus('🗑️ Projeto excluído', 'online');
   } catch (error) {
     alert('Erro ao excluir: ' + error.message);
   }
@@ -799,17 +973,18 @@ async function deletarSitio(id, nome) {
 function renderizarListaSitios() {
   const el = document.getElementById('listaSitios');
   if (sitiosSalvos.length === 0) {
-    el.innerHTML = `<div style="text-align:center; padding:15px; font-size:0.8em; opacity:0.6;">Nenhum sítio salvo ainda.</div>`;
+    el.innerHTML = `<div style="text-align:center; padding:15px; font-size:0.8em; opacity:0.6;">Nenhum projeto salvo ainda.</div>`;
     return;
   }
 
   el.innerHTML = sitiosSalvos.map(s => {
     const data = s.atualizadoEm ? new Date(s.atualizadoEm).toLocaleDateString('pt-BR') : '—';
     const ativoCls = s.id === idSitioAtual ? ' ativo' : '';
+    const icone = s.modo === 'casa' ? '🏠' : '🌳';
     return `
       <div class="item-sitio${ativoCls}" onclick="window.carregarSitio('${s.id}')">
         <div>
-          <div class="nome">🏡 ${s.nome}</div>
+          <div class="nome">${icone} ${s.nome}</div>
           <div class="data">${s.largura}×${s.altura}m • ${data}</div>
         </div>
         <button class="btn-del" onclick="event.stopPropagation(); window.deletarSitio('${s.id}', '${s.nome.replace(/'/g, "\\'")}')">🗑️</button>
@@ -832,11 +1007,13 @@ function escutarSitios() {
   });
 }
 
-// ==================== EXPORTAR PDF ====================
+// ============================================================
+//  EXPORTAR PDF
+// ============================================================
 window.exportarPDF = async function() {
-  const nomeSitio = document.getElementById('nomeSitio').value.trim() || 'Sitio sem nome';
+  const nomeSitio = document.getElementById('nomeSitio').value.trim() || 'Projeto sem nome';
 
-  // ============ 1. DESENHA O TERRENO EM CANVAS ============
+  // ============ 1. DESENHA TUDO EM CANVAS ============
   const CELL = 30;
   const canvas = document.createElement('canvas');
   canvas.width = larguraAtual * CELL;
@@ -850,8 +1027,15 @@ window.exportarPDF = async function() {
     galpao:   '#a1887f', acerola:  '#ff5252', manga:    '#ffb300',
     goiaba:   '#e57373', maracuja: '#ffd54f', cupuacu:  '#8d6e63',
     graviola: '#66bb6a', mangueira:'#7cb342',
+    parede:    '#e0e0e0', divisoria: '#e0e0e0', porta: '#e0e0e0',
+    janela:    '#e0e0e0', piso: '#cfd8dc',
+    piso_sala: '#cfd8dc', piso_quarto: '#cfd8dc', piso_cozinha: '#cfd8dc',
+    piso_banheiro: '#cfd8dc', piso_area: '#cfd8dc',
+    grama_casa: '#7cb342', terra_casa: '#8d6e63', caminho_casa: '#bcaaa4',
+    piscina: '#42a5f5', jardim: '#7cb342', arvore_casa: '#7cb342',
   };
 
+  // Fundo geral (só a parte ativa do sítio)
   ctx.fillStyle = '#1e2b38';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -870,18 +1054,36 @@ window.exportarPDF = async function() {
         continue;
       }
 
+      // Cor de fundo
       ctx.fillStyle = CORES[tipo] || '#7cb342';
       ctx.fillRect(px + 1, py + 1, CELL - 2, CELL - 2);
 
-      const f = FERRAMENTAS.find(t => t.id === tipo);
-      if (f && f.emoji) {
-        ctx.font = `${Math.floor(CELL * 0.7)}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(f.emoji, px + CELL / 2, py + CELL / 2 + 1);
-      }
-
-      if (tipo === 'mangueira') {
+      // Desenhos especiais
+      if (tipo === 'parede') {
+        ctx.fillStyle = '#222';
+        ctx.fillRect(px + 1, py + 1, CELL - 2, CELL - 2);
+      } else if (tipo === 'divisoria') {
+        ctx.fillStyle = '#444';
+        ctx.fillRect(px + CELL * 0.4, py + CELL * 0.4, CELL * 0.2, CELL * 0.2);
+      } else if (tipo === 'porta') {
+        ctx.fillStyle = '#222';
+        ctx.fillRect(px + 1, py + 1, CELL - 2, CELL - 2);
+        // Vão marrom
+        ctx.fillStyle = '#8d6e63';
+        ctx.fillRect(px + CELL * 0.3, py + 1, CELL * 0.4, CELL - 2);
+      } else if (tipo === 'janela') {
+        ctx.fillStyle = '#222';
+        ctx.fillRect(px + 1, py + 1, CELL - 2, CELL - 2);
+        // Linha azul
+        ctx.fillStyle = '#4fc3f7';
+        ctx.fillRect(px + 1, py + CELL * 0.4, CELL - 2, CELL * 0.2);
+      } else if (tipo === 'piso' || tipo.startsWith('piso_')) {
+        // Piso com borda tracejada
+        ctx.strokeStyle = '#90a4ae';
+        ctx.setLineDash([3, 3]);
+        ctx.strokeRect(px + 3, py + 3, CELL - 6, CELL - 6);
+        ctx.setLineDash([]);
+      } else if (tipo === 'mangueira') {
         ctx.fillStyle = '#00bcd4';
         ctx.beginPath();
         ctx.arc(px + CELL / 2, py + CELL / 2, CELL * 0.15, 0, Math.PI * 2);
@@ -890,10 +1092,19 @@ window.exportarPDF = async function() {
         ctx.lineWidth = 2;
         ctx.stroke();
       }
+
+      // Emoji
+      const f = FERRAMENTAS.find(t => t.id === tipo);
+      if (f && f.emoji) {
+        ctx.font = `${Math.floor(CELL * 0.7)}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(f.emoji, px + CELL / 2, py + CELL / 2 + 1);
+      }
     }
   }
 
-  // ============ 2. ESTATÍSTICAS SEM EMOJIS ============
+  // ============ 2. ESTATÍSTICAS EM TEXTO ============
   const contagem = {};
   let areaAtiva = 0;
   for (let y = 0; y < alturaAtual; y++)
@@ -904,20 +1115,19 @@ window.exportarPDF = async function() {
     }
 
   const linhasResumo = [];
-  linhasResumo.push(`Area do sitio: ${areaAtiva} m2`);
+  linhasResumo.push(`Area ativa: ${areaAtiva} m2`);
   linhasResumo.push(`Grade total: ${larguraAtual * alturaAtual} m2`);
   linhasResumo.push('');
 
+  // Frutíferas
   const frutas = FERRAMENTAS.filter(f => f.grupo === 'fruta');
-  const temFruta = frutas.some(f => (contagem[f.id] || 0) > 0);
-  if (temFruta) {
+  if (frutas.some(f => (contagem[f.id] || 0) > 0)) {
     linhasResumo.push('FRUTIFERAS:');
     let totalProducao = 0;
     frutas.forEach(f => {
       const qtd = contagem[f.id] || 0;
       if (qtd > 0) {
-        const prod = qtd * f.producao;
-        totalProducao += prod;
+        totalProducao += qtd * f.producao;
         linhasResumo.push(`  - ${f.nome}: ${qtd} pes`);
       }
     });
@@ -925,6 +1135,7 @@ window.exportarPDF = async function() {
     linhasResumo.push('');
   }
 
+  // Estruturas
   const estruturas = FERRAMENTAS.filter(f => f.grupo === 'estrutura');
   if (estruturas.some(f => (contagem[f.id] || 0) > 0)) {
     linhasResumo.push('ESTRUTURAS:');
@@ -935,6 +1146,38 @@ window.exportarPDF = async function() {
     linhasResumo.push('');
   }
 
+  // Construção
+  const qtdParede = (contagem['parede'] || 0) + (contagem['divisoria'] || 0);
+  const qtdPorta = contagem['porta'] || 0;
+  const qtdJanela = contagem['janela'] || 0;
+  const qtdPiso = (contagem['piso'] || 0) +
+                  (contagem['piso_sala'] || 0) +
+                  (contagem['piso_quarto'] || 0) +
+                  (contagem['piso_cozinha'] || 0) +
+                  (contagem['piso_banheiro'] || 0) +
+                  (contagem['piso_area'] || 0);
+
+  if (qtdParede + qtdPorta + qtdJanela + qtdPiso > 0) {
+    linhasResumo.push('CONSTRUCAO:');
+    if (qtdParede > 0) linhasResumo.push(`  - Paredes: ${qtdParede} m`);
+    if (qtdPorta > 0)  linhasResumo.push(`  - Portas: ${qtdPorta}`);
+    if (qtdJanela > 0) linhasResumo.push(`  - Janelas: ${qtdJanela}`);
+    if (qtdPiso > 0)   linhasResumo.push(`  - Piso total: ${qtdPiso} m2`);
+    linhasResumo.push('');
+  }
+
+  // Ambientes
+  const ambientes = FERRAMENTAS.filter(f => f.grupo === 'ambiente');
+  if (ambientes.some(f => (contagem[f.id] || 0) > 0)) {
+    linhasResumo.push('AMBIENTES:');
+    ambientes.forEach(f => {
+      const qtd = contagem[f.id] || 0;
+      if (qtd > 0) linhasResumo.push(`  - ${f.nome}: ${qtd} m2`);
+    });
+    linhasResumo.push('');
+  }
+
+  // Irrigação
   const qtdMang = contagem['mangueira'] || 0;
   if (qtdMang > 0) {
     linhasResumo.push('IRRIGACAO:');
@@ -951,19 +1194,18 @@ window.exportarPDF = async function() {
   const pdfAltura = pdf.internal.pageSize.getHeight();
   const margem = 12;
 
-  // ============ 4. CABEÇALHO ============
   let yAtual = margem;
   pdf.setFontSize(18);
   pdf.setTextColor(44, 62, 80);
   pdf.setFont('helvetica', 'bold');
-  pdf.text(`Sitio: ${nomeSitio}`, margem, yAtual);
+  pdf.text(`Projeto: ${nomeSitio}`, margem, yAtual);
   yAtual += 7;
 
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'normal');
   pdf.setTextColor(100, 100, 100);
   pdf.text(
-    `Gerado em ${new Date().toLocaleString('pt-BR')}  |  Dimensoes: ${larguraAtual}m x ${alturaAtual}m`,
+    `Gerado em ${new Date().toLocaleString('pt-BR')}  |  Dimensoes: ${larguraAtual}m x ${alturaAtual}m  |  Modo: ${modoAtual === 'casa' ? 'Casa' : 'Sitio'}`,
     margem, yAtual
   );
   yAtual += 8;
@@ -973,8 +1215,8 @@ window.exportarPDF = async function() {
   pdf.line(margem, yAtual, pdfLargura - margem, yAtual);
   yAtual += 6;
 
-  // ============ 5. CALCULA ESCALA ============
-  const alturaReservadaStats = orientacao === 'l' ? 50 : 70;
+  // Escala
+  const alturaReservadaStats = orientacao === 'l' ? 55 : 75;
   const larguraDisponivel = pdfLargura - 2 * margem;
   const alturaDisponivel = pdfAltura - yAtual - alturaReservadaStats - margem;
 
@@ -988,8 +1230,6 @@ window.exportarPDF = async function() {
   }
 
   const xImg = margem + (larguraDisponivel - larguraImg) / 2;
-
-  // ============ 6. ADICIONA A IMAGEM ============
   const imgData = canvas.toDataURL('image/png');
 
   pdf.setDrawColor(30, 43, 56);
@@ -999,7 +1239,7 @@ window.exportarPDF = async function() {
   pdf.addImage(imgData, 'PNG', xImg, yAtual, larguraImg, alturaImg);
   yAtual += alturaImg + 8;
 
-  // ============ 7. ESTATÍSTICAS ============
+  // Resumo
   if (yAtual > pdfAltura - 40) {
     pdf.addPage();
     yAtual = margem;
@@ -1008,7 +1248,7 @@ window.exportarPDF = async function() {
   pdf.setFontSize(12);
   pdf.setFont('helvetica', 'bold');
   pdf.setTextColor(44, 62, 80);
-  pdf.text('Resumo do Sitio', margem, yAtual);
+  pdf.text('Resumo', margem, yAtual);
   yAtual += 7;
 
   pdf.setFontSize(10);
@@ -1020,7 +1260,8 @@ window.exportarPDF = async function() {
       pdf.addPage();
       yAtual = margem;
     }
-    if (linha.startsWith('FRUTIFERAS') || linha.startsWith('ESTRUTURAS') || linha.startsWith('IRRIGACAO')) {
+    const cabecalhos = ['FRUTIFERAS', 'ESTRUTURAS', 'CONSTRUCAO', 'AMBIENTES', 'IRRIGACAO'];
+    if (cabecalhos.includes(linha.replace(':', ''))) {
       pdf.setFont('helvetica', 'bold');
       pdf.setTextColor(44, 62, 80);
       pdf.text(linha, margem, yAtual);
@@ -1032,7 +1273,7 @@ window.exportarPDF = async function() {
     yAtual += 5;
   });
 
-  // ============ 8. LEGENDA ============
+  // Legenda
   yAtual += 3;
   if (yAtual > pdfAltura - 30) {
     pdf.addPage();
@@ -1050,26 +1291,25 @@ window.exportarPDF = async function() {
   pdf.setTextColor(60, 60, 60);
 
   const legendas = [
-    { cor: CORES.grama, texto: 'Grama' },
-    { cor: CORES.terra, texto: 'Terra' },
-    { cor: CORES.agua, texto: 'Agua/Lago' },
-    { cor: CORES.caminho, texto: 'Caminho' },
-    { cor: CORES.areia, texto: 'Areia' },
-    { cor: CORES.pedra, texto: 'Pedra' },
-    { cor: CORES.casa, texto: 'Casa' },
-    { cor: CORES.horta, texto: 'Horta' },
-    { cor: CORES.poco, texto: 'Poco/Caixa' },
-    { cor: CORES.galpao, texto: 'Galpao' },
-    { cor: CORES.acerola, texto: 'Acerola' },
-    { cor: CORES.manga, texto: 'Manga' },
-    { cor: CORES.goiaba, texto: 'Goiaba' },
-    { cor: CORES.maracuja, texto: 'Maracuja' },
-    { cor: CORES.cupuacu, texto: 'Cupuacu' },
-    { cor: CORES.graviola, texto: 'Graviola' },
+    { cor: '#7cb342', texto: 'Grama' },
+    { cor: '#8d6e63', texto: 'Terra' },
+    { cor: '#42a5f5', texto: 'Agua' },
+    { cor: '#bcaaa4', texto: 'Caminho' },
+    { cor: '#fdd835', texto: 'Areia' },
+    { cor: '#9e9e9e', texto: 'Pedra' },
+    { cor: '#e57373', texto: 'Casa/Goiaba' },
+    { cor: '#a1887f', texto: 'Horta/Galpao' },
+    { cor: '#90a4ae', texto: 'Poco/Caixa' },
+    { cor: '#ff5252', texto: 'Acerola' },
+    { cor: '#ffb300', texto: 'Manga' },
+    { cor: '#ffd54f', texto: 'Maracuja' },
+    { cor: '#66bb6a', texto: 'Graviola' },
+    { cor: '#222222', texto: 'Parede' },
+    { cor: '#444444', texto: 'Divisoria' },
     { cor: '#00bcd4', texto: 'Mangueira' },
+    { cor: '#cfd8dc', texto: 'Piso' },
   ];
 
-  // Layout em 4 colunas fixas
   const cols = 4;
   const colLargura = (pdfLargura - 2 * margem) / cols;
   let idx = 0;
@@ -1095,15 +1335,17 @@ window.exportarPDF = async function() {
     idx++;
   });
 
-  // ============ 9. SALVA ============
   const nomeArquivo = nomeSitio.replace(/[^a-zA-Z0-9]/g, '_') + '.pdf';
   pdf.save(nomeArquivo);
 
   setStatus('📄 PDF exportado!', 'online');
 };
 
+// ============================================================
+//  NOVO / LIMPAR
+// ============================================================
 window.novoSitio = function() {
-  if (!confirm('Criar um novo sítio? O atual será descartado (se não foi salvo, perde).')) return;
+  if (!confirm('Criar um novo projeto? O atual será descartado.')) return;
   idSitioAtual = null;
   document.getElementById('nomeSitio').value = '';
   document.getElementById('largura').value = 30;
@@ -1112,7 +1354,7 @@ window.novoSitio = function() {
   ativo = [];
   criarTerreno();
   renderizarListaSitios();
-  setStatus('✨ Novo sítio em branco', 'online');
+  setStatus('✨ Novo projeto em branco', 'online');
 };
 
 window.limparTudo = function() {
@@ -1121,6 +1363,9 @@ window.limparTudo = function() {
   render();
 };
 
+// ============================================================
+//  EVENTOS GLOBAIS
+// ============================================================
 document.addEventListener('mouseup', () => pintando = false);
 document.addEventListener('contextmenu', e => {
   if (e.target.closest('#terreno')) e.preventDefault();
@@ -1134,6 +1379,7 @@ window.marcarTudo = marcarTudo;
 window.desmarcarTudo = desmarcarTudo;
 window.render = render;
 
+// Inicialização
 montarFerramentas();
 criarTerreno();
 escutarSitios();
