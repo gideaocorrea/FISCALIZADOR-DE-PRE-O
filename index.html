@@ -673,6 +673,29 @@ function setStatus(texto, tipo) {
   statusEl.className = 'status-conexao' + (tipo ? ' ' + tipo : '');
 }
 
+// ==================== CONVERSÃO MATRIZ <-> STRING ====================
+function matrizParaString(matriz) {
+  return matriz.map(linha => linha.join(',')).join('|');
+}
+
+function stringParaMatriz(str, largura, altura, valorPadrao) {
+  if (!str) {
+    return Array.from({length: altura}, () => Array(largura).fill(valorPadrao));
+  }
+  const linhas = str.split('|').map(l => l.split(','));
+  // Garante dimensões corretas
+  const resultado = [];
+  for (let y = 0; y < altura; y++) {
+    const linha = [];
+    for (let x = 0; x < largura; x++) {
+      linha.push(linhas[y] && linhas[y][x] !== undefined ? linhas[y][x] : valorPadrao);
+    }
+    resultado.push(linha);
+  }
+  return resultado;
+}
+
+// ==================== SALVAR ====================
 async function salvarNoFirebase() {
   const nome = document.getElementById('nomeSitio').value.trim();
   if (!nome) {
@@ -684,8 +707,8 @@ async function salvarNoFirebase() {
     nome: nome,
     largura: larguraAtual,
     altura: alturaAtual,
-    grid: grid,
-    ativo: ativo,
+    grid: matrizParaString(grid),
+    ativo: matrizParaString(ativo.map(l => l.map(v => v ? '1' : '0'))),
     atualizadoEm: new Date().toISOString()
   };
 
@@ -706,6 +729,7 @@ async function salvarNoFirebase() {
   }
 }
 
+// ==================== CARREGAR ====================
 async function carregarSitio(id) {
   try {
     const snap = await getDocs(collection(db, COLECAO_SITIOS));
@@ -715,8 +739,11 @@ async function carregarSitio(id) {
 
     larguraAtual = encontrado.largura;
     alturaAtual = encontrado.altura;
-    grid = encontrado.grid;
-    ativo = encontrado.ativo;
+    grid = stringParaMatriz(encontrado.grid, larguraAtual, alturaAtual, 'grama');
+
+    const ativoStr = stringParaMatriz(encontrado.ativo, larguraAtual, alturaAtual, '1');
+    ativo = ativoStr.map(linha => linha.map(v => v === '1' || v === 'true' || v === true));
+
     document.getElementById('largura').value = larguraAtual;
     document.getElementById('altura').value = alturaAtual;
     document.getElementById('nomeSitio').value = encontrado.nome;
@@ -730,6 +757,7 @@ async function carregarSitio(id) {
   }
 }
 
+// ==================== DELETAR ====================
 async function deletarSitio(id, nome) {
   if (!confirm(`Excluir o sítio "${nome}"?`)) return;
   try {
