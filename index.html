@@ -832,7 +832,7 @@ function escutarSitios() {
   });
 }
 
-// ==================== EXPORTAR PDF (ESCALA AUTOMÁTICA) ====================
+// ==================== EXPORTAR PDF ====================
 window.exportarPDF = async function() {
   const nomeSitio = document.getElementById('nomeSitio').value.trim() || 'Sitio sem nome';
 
@@ -893,8 +893,53 @@ window.exportarPDF = async function() {
     }
   }
 
-  // ============ 2. ESTATÍSTICAS EM TEXTO ============
-  const statsTexto = document.getElementById('estatisticas').innerText;
+  // ============ 2. ESTATÍSTICAS SEM EMOJIS ============
+  const contagem = {};
+  let areaAtiva = 0;
+  for (let y = 0; y < alturaAtual; y++)
+    for (let x = 0; x < larguraAtual; x++) {
+      if (ativo[y][x]) areaAtiva++;
+      const t = grid[y][x];
+      if (ativo[y][x]) contagem[t] = (contagem[t] || 0) + 1;
+    }
+
+  const linhasResumo = [];
+  linhasResumo.push(`Area do sitio: ${areaAtiva} m2`);
+  linhasResumo.push(`Grade total: ${larguraAtual * alturaAtual} m2`);
+  linhasResumo.push('');
+
+  const frutas = FERRAMENTAS.filter(f => f.grupo === 'fruta');
+  const temFruta = frutas.some(f => (contagem[f.id] || 0) > 0);
+  if (temFruta) {
+    linhasResumo.push('FRUTIFERAS:');
+    let totalProducao = 0;
+    frutas.forEach(f => {
+      const qtd = contagem[f.id] || 0;
+      if (qtd > 0) {
+        const prod = qtd * f.producao;
+        totalProducao += prod;
+        linhasResumo.push(`  - ${f.nome}: ${qtd} pes`);
+      }
+    });
+    linhasResumo.push(`  Producao estimada/ano: ~${totalProducao} kg`);
+    linhasResumo.push('');
+  }
+
+  const estruturas = FERRAMENTAS.filter(f => f.grupo === 'estrutura');
+  if (estruturas.some(f => (contagem[f.id] || 0) > 0)) {
+    linhasResumo.push('ESTRUTURAS:');
+    estruturas.forEach(f => {
+      const qtd = contagem[f.id] || 0;
+      if (qtd > 0) linhasResumo.push(`  - ${f.nome}: ${qtd} m2`);
+    });
+    linhasResumo.push('');
+  }
+
+  const qtdMang = contagem['mangueira'] || 0;
+  if (qtdMang > 0) {
+    linhasResumo.push('IRRIGACAO:');
+    linhasResumo.push(`  - Mangueira: ${qtdMang} m`);
+  }
 
   // ============ 3. CRIA O PDF ============
   const { jsPDF } = window.jspdf;
@@ -929,7 +974,7 @@ window.exportarPDF = async function() {
   yAtual += 6;
 
   // ============ 5. CALCULA ESCALA ============
-  const alturaReservadaStats = orientacao === 'l' ? 45 : 60;
+  const alturaReservadaStats = orientacao === 'l' ? 50 : 70;
   const larguraDisponivel = pdfLargura - 2 * margem;
   const alturaDisponivel = pdfAltura - yAtual - alturaReservadaStats - margem;
 
@@ -952,7 +997,7 @@ window.exportarPDF = async function() {
   pdf.rect(xImg - 1, yAtual - 1, larguraImg + 2, alturaImg + 2);
 
   pdf.addImage(imgData, 'PNG', xImg, yAtual, larguraImg, alturaImg);
-  yAtual += alturaImg + 6;
+  yAtual += alturaImg + 8;
 
   // ============ 7. ESTATÍSTICAS ============
   if (yAtual > pdfAltura - 40) {
@@ -964,25 +1009,32 @@ window.exportarPDF = async function() {
   pdf.setFont('helvetica', 'bold');
   pdf.setTextColor(44, 62, 80);
   pdf.text('Resumo do Sitio', margem, yAtual);
-  yAtual += 6;
+  yAtual += 7;
 
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'normal');
   pdf.setTextColor(50, 50, 50);
 
-  const linhasStats = pdf.splitTextToSize(statsTexto, pdfLargura - 2 * margem);
-  for (const linha of linhasStats) {
+  linhasResumo.forEach(linha => {
     if (yAtual > pdfAltura - margem) {
       pdf.addPage();
       yAtual = margem;
     }
-    pdf.text(linha, margem, yAtual);
+    if (linha.startsWith('FRUTIFERAS') || linha.startsWith('ESTRUTURAS') || linha.startsWith('IRRIGACAO')) {
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(44, 62, 80);
+      pdf.text(linha, margem, yAtual);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(50, 50, 50);
+    } else {
+      pdf.text(linha, margem, yAtual);
+    }
     yAtual += 5;
-  }
+  });
 
   // ============ 8. LEGENDA ============
-  yAtual += 5;
-  if (yAtual > pdfAltura - 25) {
+  yAtual += 3;
+  if (yAtual > pdfAltura - 30) {
     pdf.addPage();
     yAtual = margem;
   }
@@ -991,7 +1043,7 @@ window.exportarPDF = async function() {
   pdf.setFont('helvetica', 'bold');
   pdf.setTextColor(44, 62, 80);
   pdf.text('Legenda', margem, yAtual);
-  yAtual += 6;
+  yAtual += 7;
 
   pdf.setFontSize(9);
   pdf.setFont('helvetica', 'normal');
@@ -1017,29 +1069,30 @@ window.exportarPDF = async function() {
     { cor: '#00bcd4', texto: 'Mangueira' },
   ];
 
-  let legX = margem;
-  let legY = yAtual;
-  const legItemLargura = 42;
-  const legItemAltura = 6;
+  // Layout em 4 colunas fixas
+  const cols = 4;
+  const colLargura = (pdfLargura - 2 * margem) / cols;
+  let idx = 0;
 
   legendas.forEach(item => {
-    if (legX + legItemLargura > pdfLargura - margem) {
-      legX = margem;
-      legY += legItemAltura;
-    }
-    if (legY > pdfAltura - margem) {
+    const col = idx % cols;
+    const row = Math.floor(idx / cols);
+    const x = margem + col * colLargura;
+    const y = yAtual + row * 6;
+
+    if (y > pdfAltura - margem) {
       pdf.addPage();
-      legX = margem;
-      legY = margem;
+      yAtual = margem - row * 6;
     }
+
     const r = parseInt(item.cor.slice(1,3), 16);
     const g = parseInt(item.cor.slice(3,5), 16);
     const b = parseInt(item.cor.slice(5,7), 16);
     pdf.setFillColor(r, g, b);
-    pdf.rect(legX, legY - 3, 4, 4, 'F');
+    pdf.rect(x, y - 3, 4, 4, 'F');
     pdf.setTextColor(60, 60, 60);
-    pdf.text(item.texto, legX + 5.5, legY);
-    legX += legItemLargura;
+    pdf.text(item.texto, x + 5.5, y);
+    idx++;
   });
 
   // ============ 9. SALVA ============
