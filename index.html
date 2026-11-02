@@ -2,478 +2,213 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>🏡 Planejador de Sítio e Casa</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🛒 Lista de Compras</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: 'Segoe UI', sans-serif;
-    background: #2c3e50;
-    color: #ecf0f1;
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
     padding: 15px;
     min-height: 100vh;
   }
-  h1 { text-align: center; margin-bottom: 15px; font-size: 1.4em; }
+  h1 { font-size: 1.3em; text-align: center; margin-bottom: 15px; }
 
   .app {
-    display: grid;
-    grid-template-columns: 250px 1fr 280px;
-    gap: 15px;
-    max-width: 1600px;
+    max-width: 700px;
     margin: 0 auto;
-  }
-  @media (max-width: 1000px) {
-    .app { grid-template-columns: 1fr; }
-  }
-
-  .painel {
-    background: #34495e;
-    border-radius: 12px;
-    padding: 15px;
-    height: fit-content;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-  .painel h2 {
-    font-size: 0.95em;
-    margin-bottom: 8px;
-    color: #f1c40f;
-    border-bottom: 1px solid #4a6274;
-    padding-bottom: 5px;
-  }
-  .painel h2:not(:first-child) { margin-top: 14px; }
-
-  .ferramenta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-bottom: 4px;
-    transition: background 0.15s;
-    font-size: 0.82em;
-  }
-  .ferramenta:hover { background: #4a6274; }
-  .ferramenta.ativa {
-    background: #27ae60;
-    box-shadow: 0 0 10px rgba(39,174,96,0.5);
-  }
-  .ferramenta .icone {
-    font-size: 1.2em;
-    width: 22px;
-    text-align: center;
-  }
-
-  .config label {
-    display: block;
-    font-size: 0.82em;
-    margin-top: 8px;
-    margin-bottom: 3px;
-  }
-  .config input {
-    width: 100%;
-    padding: 6px;
-    border-radius: 6px;
-    border: none;
-    background: #2c3e50;
-    color: white;
-    font-size: 0.9em;
-  }
-  .config button {
-    width: 100%;
-    padding: 7px;
-    margin-top: 8px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    background: #3498db;
-    color: white;
-    font-size: 0.85em;
-  }
-  .config button:hover { background: #2980b9; }
-
-  .terreno-wrap {
-    background: #34495e;
-    border-radius: 12px;
-    padding: 15px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    overflow: auto;
-    max-height: 90vh;
+    gap: 12px;
   }
 
-  #terreno {
-    display: grid;
-    gap: 1px;
-    background: #1e2b38;
-    padding: 2px;
-    border-radius: 8px;
-    user-select: none;
-    touch-action: none;
-    position: relative;
+  .card {
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 15px;
   }
-  .celula {
-    width: 26px;
-    height: 26px;
-    background: #7cb342;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    cursor: pointer;
-    transition: filter 0.1s;
-    position: relative;
-  }
-  .celula:hover { filter: brightness(1.2); }
-
-  .celula.fora {
-    background: #1a1a1a !important;
-    opacity: 0.35;
-  }
-
-  /* Terreno */
-  .celula.grama   { background: #7cb342; }
-  .celula.terra   { background: #8d6e63; }
-  .celula.agua    { background: #42a5f5; }
-  .celula.areia   { background: #fdd835; }
-  .celula.pedra   { background: #9e9e9e; }
-  .celula.caminho { background: #bcaaa4; }
-
-  /* Estruturas */
-  .celula.casa    { background: #e57373; font-size: 20px; }
-  .celula.horta   { background: #a1887f; font-size: 15px; }
-  .celula.poco    { background: #90a4ae; font-size: 16px; }
-  .celula.galpao  { background: #a1887f; font-size: 16px; }
-
-  /* Frutíferas */
-  .celula.acerola  { background: #ff5252; }
-  .celula.manga    { background: #ffb300; }
-  .celula.goiaba   { background: #e57373; }
-  .celula.maracuja { background: #ffd54f; }
-  .celula.cupuacu  { background: #8d6e63; }
-  .celula.graviola { background: #66bb6a; }
-
-  /* Irrigação */
-  .celula.mangueira::after {
-    content: '';
-    position: absolute;
-    inset: 40%;
-    background: #00bcd4;
-    border-radius: 50%;
-    box-shadow: 0 0 8px #00e5ff;
-    z-index: 2;
-    pointer-events: none;
-  }
-
-  /* ===== CONSTRUÇÃO ===== */
-  .celula.parede {
-    background: #e0e0e0;
-  }
-  .celula.parede::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: #222;
-    z-index: 1;
-  }
-
-  .celula.divisoria {
-    background: #e0e0e0;
-  }
-  .celula.divisoria::after {
-    content: '';
-    position: absolute;
-    left: 40%;
-    right: 40%;
-    top: 40%;
-    bottom: 40%;
-    background: #444;
-    z-index: 1;
-  }
-
-  .celula.porta {
-    background: #e0e0e0;
-  }
-  .celula.porta::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-      90deg,
-      #222 0, #222 2px,
-      #8d6e63 2px, #8d6e63 6px
-    );
-    z-index: 1;
-  }
-
-  .celula.janela {
-    background: #e0e0e0;
-  }
-  .celula.janela::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: #222;
-    z-index: 1;
-  }
-  .celula.janela::before {
-    content: '';
-    position: absolute;
-    left: 0; right: 0;
-    top: 40%; bottom: 40%;
-    background: #4fc3f7;
-    box-shadow: 0 0 4px #29b6f6;
-    z-index: 2;
-  }
-
-  .celula.piso {
-    background: #cfd8dc;
-  }
-  .celula.piso::after {
-    content: '';
-    position: absolute;
-    inset: 2px;
-    border: 1px dashed #90a4ae;
-    z-index: 1;
-    pointer-events: none;
-  }
-
-  .celula.alcance {
-    box-shadow: inset 0 0 0 2px rgba(0,229,255,0.6);
-  }
-
-  .estatistica {
+  .card h2 {
+    font-size: .9em;
+    color: #fbbf24;
+    margin-bottom: 10px;
     display: flex;
     justify-content: space-between;
-    font-size: 0.8em;
-    padding: 4px 0;
-    border-bottom: 1px dashed #4a6274;
-  }
-  .estatistica b { color: #f1c40f; }
-
-  .dica {
-    font-size: 0.75em;
-    color: #bdc3c7;
-    margin-top: 10px;
-    line-height: 1.4;
-    text-align: center;
+    align-items: center;
   }
 
-  .acoes { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-  .acoes button {
-    flex: 1;
-    padding: 8px;
+  /* Formulário */
+  .form-linha {
+    display: grid;
+    grid-template-columns: 1fr 90px 70px auto;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  @media (max-width: 500px) {
+    .form-linha { grid-template-columns: 1fr 1fr; }
+    .form-linha button { grid-column: span 2; }
+  }
+  input {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background: #0f172a;
+    color: white;
+    font-size: .9em;
+    width: 100%;
+  }
+  input:focus { outline: none; border-color: #fbbf24; }
+  input::placeholder { color: #64748b; }
+
+  button {
+    padding: 10px 14px;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     font-weight: bold;
-    font-size: 0.8em;
+    font-size: .85em;
     color: white;
   }
-  .btn-salvar { background: #27ae60; }
-  .btn-limpar { background: #c0392b; }
-  .btn-novo   { background: #f39c12; }
-  .btn-pdf    { background: #8e44ad; }
-  .btn-pdf:hover { background: #71368a; }
+  .btn-verde { background: #16a34a; }
+  .btn-verde:hover { background: #15803d; }
+  .btn-azul { background: #2563eb; }
+  .btn-vermelho { background: #dc2626; }
+  .btn-cinza { background: #475569; }
 
-  .toggle-alcance {
-    display: flex;
+  /* Sugestão */
+  #sugestao {
+    font-size: .75em;
+    color: #38bdf8;
+    padding: 4px 8px;
+    margin-bottom: 8px;
+    min-height: 20px;
+  }
+  #sugestao b { color: #fbbf24; }
+
+  /* Lista */
+  .item {
+    display: grid;
+    grid-template-columns: 24px 1fr auto auto;
+    gap: 10px;
     align-items: center;
-    gap: 8px;
-    font-size: 0.8em;
-    margin-top: 8px;
-    cursor: pointer;
-    user-select: none;
-  }
-  .toggle-alcance input { cursor: pointer; }
-
-  .lista-sitios {
-    max-height: 250px;
-    overflow-y: auto;
-    margin-top: 8px;
-  }
-  .item-sitio {
-    background: #2c3e50;
-    padding: 8px 10px;
+    padding: 10px;
+    background: #0f172a;
     border-radius: 8px;
     margin-bottom: 6px;
-    cursor: pointer;
-    font-size: 0.8em;
+    border-left: 3px solid #475569;
+    transition: .15s;
+  }
+  .item.comprado {
+    opacity: .5;
+    border-left-color: #16a34a;
+  }
+  .item.comprado .nome { text-decoration: line-through; }
+  .item .nome { font-weight: 600; font-size: .9em; }
+  .item .detalhe { font-size: .75em; color: #94a3b8; margin-top: 2px; }
+  .item .preco-atual { color: #fbbf24; font-weight: bold; font-size: .9em; white-space: nowrap; }
+  .item input[type="checkbox"] {
+    width: 18px; height: 18px; cursor: pointer; accent-color: #16a34a;
+  }
+  .item .btn-del {
+    background: transparent;
+    color: #ef4444;
+    padding: 4px 8px;
+    font-size: 1em;
+  }
+  .item .btn-del:hover { background: #7f1d1d; }
+
+  /* Total */
+  .total {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: 0.15s;
-    border-left: 3px solid transparent;
+    padding: 12px 15px;
+    background: #1e293b;
+    border-radius: 12px;
+    font-size: 1em;
+    border: 2px solid #fbbf24;
   }
-  .item-sitio:hover { background: #3b536b; border-left-color: #f1c40f; }
-  .item-sitio.ativo { background: #27ae60; border-left-color: #fff; }
-  .item-sitio .nome { font-weight: bold; }
-  .item-sitio .data { font-size: 0.85em; opacity: 0.6; }
-  .item-sitio .btn-del {
-    background: #c0392b;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 2px 6px;
-    cursor: pointer;
-    font-size: 0.9em;
-    margin-left: 6px;
-  }
-  .item-sitio .btn-del:hover { background: #e74c3c; }
+  .total b { color: #fbbf24; font-size: 1.2em; }
 
-  .status-conexao {
-    font-size: 0.75em;
-    padding: 6px 10px;
-    border-radius: 6px;
+  /* Status */
+  #status {
+    font-size: .75em;
     text-align: center;
-    margin-bottom: 10px;
-    background: #fff3cd;
-    color: #856404;
-  }
-  .status-conexao.online { background: #d4edda; color: #155724; }
-  .status-conexao.offline { background: #f8d7da; color: #721c24; }
-
-  .campo-nome {
-    width: 100%;
-    padding: 8px;
+    padding: 6px;
     border-radius: 6px;
-    border: 2px solid #4a6274;
-    background: #2c3e50;
-    color: white;
-    font-size: 0.9em;
-    margin-top: 5px;
+    background: #78350f;
   }
-  .campo-nome:focus {
-    outline: none;
-    border-color: #f1c40f;
+  #status.ok { background: #14532d; }
+  #status.erro { background: #7f1d1d; }
+
+  /* Histórico */
+  .historico {
+    max-height: 150px;
+    overflow-y: auto;
+    font-size: .8em;
+  }
+  .historico-linha {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 8px;
+    border-bottom: 1px dashed #334155;
+  }
+  .historico-linha:last-child { border-bottom: none; }
+
+  .vazio {
+    text-align: center;
+    padding: 20px;
+    font-size: .85em;
+    opacity: .5;
   }
 
-  /* Modo: Sítio ou Casa */
-  .modo-selector {
+  .acoes {
     display: flex;
     gap: 6px;
-    margin-bottom: 12px;
-    background: #2c3e50;
-    padding: 4px;
-    border-radius: 8px;
+    margin-top: 8px;
   }
-  .modo-btn {
-    flex: 1;
-    padding: 8px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.8em;
-    background: transparent;
-    color: #95a5a6;
-    transition: 0.15s;
-  }
-  .modo-btn.ativo {
-    background: #27ae60;
-    color: white;
-  }
+  .acoes button { flex: 1; }
 </style>
 </head>
 <body>
-<h1>🏡 Planejador de Sítio e Casa</h1>
+
+<h1>🛒 Lista de Compras</h1>
 
 <div class="app">
 
-  <div class="painel">
-    <!-- Seletor de modo -->
-    <div class="modo-selector">
-      <button class="modo-btn ativo" onclick="mudarModo('sitio')" id="modoSitioBtn">🌳 Sítio</button>
-      <button class="modo-btn" onclick="mudarModo('casa')" id="modoCasaBtn">🏠 Casa</button>
+  <div id="status">🔄 Conectando...</div>
+
+  <!-- Adicionar item -->
+  <div class="card">
+    <h2>➕ Adicionar item</h2>
+    <div class="form-linha">
+      <input type="text" id="nome" placeholder="Nome do item" autocomplete="off">
+      <input type="number" id="preco" placeholder="Preço" step="0.01" min="0">
+      <input type="number" id="qtd" placeholder="Qtd" value="1" min="1" step="1">
+      <button class="btn-verde" onclick="adicionar()">Adicionar</button>
     </div>
-
-    <!-- Modo SÍTIO -->
-    <div id="modoSitio" style="display:block;">
-      <h2>📐 Área do Sítio</h2>
-      <div id="ferramentasArea"></div>
-
-      <h2>🧰 Terreno</h2>
-      <div id="ferramentasTerreno"></div>
-
-      <h2>🏠 Estruturas</h2>
-      <div id="ferramentasEstruturas"></div>
-
-      <h2>💧 Irrigação</h2>
-      <div id="ferramentasIrrigacao"></div>
-      <label class="toggle-alcance">
-        <input type="checkbox" id="mostrarAlcance" onchange="render()">
-        Mostrar alcance da mangueira
-      </label>
-
-      <h2>🌳 Frutíferas</h2>
-      <div id="ferramentasFrutas"></div>
-    </div>
-
-    <!-- Modo CASA -->
-    <div id="modoCasa" style="display:none;">
-      <h2>📐 Área da Casa</h2>
-      <div id="ferramentasAreaCasa"></div>
-
-      <h2>🧱 Construção</h2>
-      <div id="ferramentasConstrucao"></div>
-
-      <h2>🛋️ Ambientes</h2>
-      <div id="ferramentasAmbientes"></div>
-
-      <h2>🏡 Externo</h2>
-      <div id="ferramentasExterno"></div>
-    </div>
+    <div id="sugestao"></div>
   </div>
 
-  <div class="terreno-wrap">
-    <div id="terreno"></div>
-    <div class="dica">
-      💡 Clique ou arraste para pintar<br>
-      🖱️ Botão direito apaga • 1 célula ≈ 1 m²<br>
-      ✏️ <b>Marcar área</b> define o formato
-    </div>
+  <!-- Lista -->
+  <div class="card">
+    <h2>
+      <span>📝 Lista</span>
+      <button class="btn-cinza" style="padding:4px 10px; font-size:.75em;" onclick="limparComprados()">🧹 Limpar comprados</button>
+    </h2>
+    <div id="lista"></div>
   </div>
 
-  <div class="painel">
-    <div id="statusConexao" class="status-conexao">🔄 Conectando ao Firebase...</div>
+  <!-- Total -->
+  <div class="total">
+    <span>💰 Total da lista</span>
+    <b id="total">R$ 0,00</b>
+  </div>
 
-    <h2>💾 Meus Projetos</h2>
-    <input type="text" id="nomeSitio" class="campo-nome" placeholder="Nome do projeto">
-    <div class="acoes">
-      <button class="btn-salvar" onclick="salvarNoFirebase()">💾 Salvar</button>
-      <button class="btn-novo" onclick="novoSitio()">✨ Novo</button>
-    </div>
-    <div id="listaSitios" class="lista-sitios">
-      <div style="text-align:center; padding:15px; font-size:0.8em; opacity:0.6;">Carregando...</div>
-    </div>
-
-    <h2>⚙️ Grade</h2>
-    <div class="config">
-      <label>Largura (m)</label>
-      <input type="number" id="largura" value="30" min="5" max="80">
-      <label>Altura (m)</label>
-      <input type="number" id="altura" value="25" min="5" max="80">
-      <button onclick="criarTerreno()">🔄 Redimensionar</button>
-      <button onclick="marcarTudo()" style="background:#27ae60;">🟩 Marcar tudo</button>
-      <button onclick="desmarcarTudo()" style="background:#c0392b;">🚫 Desmarcar tudo</button>
-    </div>
-
-    <h2>📊 Resumo</h2>
-    <div id="estatisticas"></div>
-
-    <h2>📄 Exportar</h2>
-    <div class="acoes">
-      <button class="btn-pdf" onclick="exportarPDF()">📄 Baixar PDF</button>
-    </div>
-
-    <h2>🗑️ Ações</h2>
-    <div class="acoes">
-      <button class="btn-limpar" onclick="limparTudo()">Limpar grade</button>
-    </div>
+  <!-- Histórico -->
+  <div class="card">
+    <h2>📊 Últimos preços pagos</h2>
+    <div id="historico" class="historico"></div>
   </div>
 
 </div>
@@ -490,899 +225,213 @@
 <script type="module">
 import { initializeApp } from "firebase/app";
 import {
-    getFirestore, collection, addDoc, getDocs, query, orderBy,
-    onSnapshot, deleteDoc, doc, updateDoc
+  getFirestore, collection, addDoc, getDocs, deleteDoc, doc,
+  updateDoc, onSnapshot, query, orderBy
 } from "firebase/firestore";
 
+// ===== CONFIG (mantenha a sua) =====
 const firebaseConfig = {
-    apiKey: "AIzaSyAyAtL3v2jSnUd4gGAU0zWXhqI84kngsio",
-    authDomain: "fiscalizador-preco.firebaseapp.com",
-    databaseURL: "https://fiscalizador-preco-default-rtdb.firebaseio.com",
-    projectId: "fiscalizador-preco",
-    storageBucket: "fiscalizador-preco.firebasestorage.app",
-    messagingSenderId: "968106554702",
-    appId: "1:968106554702:web:e812a8e07e2aac33eb5a1f"
+  apiKey: "AIzaSyAyAtL3v2jSnUd4gGAU0zWXhqI84kngsio",
+  authDomain: "fiscalizador-preco.firebaseapp.com",
+  projectId: "fiscalizador-preco",
+  storageBucket: "fiscalizador-preco.firebasestorage.app",
+  messagingSenderId: "968106554702",
+  appId: "1:968106554702:web:e812a8e07e2aac33eb5a1f"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const COLECAO_SITIOS = 'sitios';
+const COL = 'compras'; // coleção nova
 
-// ============================================================
-//  FERRAMENTAS
-// ============================================================
-const FERRAMENTAS = [
-  // ===== ÁREA (comum a ambos os modos) =====
-  { id: 'marcar',    nome: 'Marcar área',    icone: '✏️', classe: 'grama', grupo: 'area', acao: 'marcar' },
-  { id: 'desmarcar', nome: 'Desmarcar',      icone: '🚫', classe: 'grama', grupo: 'area', acao: 'desmarcar' },
+// ===== ESTADO =====
+let itens = [];         // itens da lista atual
+let historico = [];     // histórico de preços (nome -> {preco, data})
 
-  // ===== TERRENO (modo sítio) =====
-  { id: 'grama',   nome: 'Grama',       icone: '🟩', classe: 'grama',   grupo: 'terreno', emoji: '', modo: 'sitio' },
-  { id: 'terra',   nome: 'Terra',       icone: '🟫', classe: 'terra',   grupo: 'terreno', emoji: '', modo: 'sitio' },
-  { id: 'agua',    nome: 'Lago/Água',   icone: '💧', classe: 'agua',    grupo: 'terreno', emoji: '', modo: 'sitio' },
-  { id: 'caminho', nome: 'Caminho',     icone: '🛤️', classe: 'caminho', grupo: 'terreno', emoji: '', modo: 'sitio' },
-  { id: 'areia',   nome: 'Areia',       icone: '🟨', classe: 'areia',   grupo: 'terreno', emoji: '', modo: 'sitio' },
-  { id: 'pedra',   nome: 'Pedra',       icone: '⬜', classe: 'pedra',   grupo: 'terreno', emoji: '', modo: 'sitio' },
-
-  // ===== ESTRUTURAS (modo sítio) =====
-  { id: 'casa',    nome: 'Casa',        icone: '🏠', classe: 'casa',    grupo: 'estrutura', emoji: '🏠', modo: 'sitio' },
-  { id: 'horta',   nome: 'Horta',       icone: '🥬', classe: 'horta',   grupo: 'estrutura', emoji: '🥬', modo: 'sitio' },
-  { id: 'poco',    nome: 'Poço/Caixa',  icone: '🚰', classe: 'poco',    grupo: 'estrutura', emoji: '🚰', modo: 'sitio' },
-  { id: 'galpao',  nome: 'Galpão',      icone: '🏚️', classe: 'galpao',  grupo: 'estrutura', emoji: '🏚️', modo: 'sitio' },
-
-  // ===== IRRIGAÇÃO (modo sítio) =====
-  { id: 'mangueira', nome: 'Mangueira', icone: '🚿', classe: 'mangueira', grupo: 'irrigacao', emoji: '', modo: 'sitio' },
-
-  // ===== FRUTÍFERAS (modo sítio) =====
-  { id: 'acerola',  nome: 'Acerola',   icone: '🔴', classe: 'acerola',  grupo: 'fruta', emoji: '🌳', espacamento: 3, producao: 20, modo: 'sitio' },
-  { id: 'manga',    nome: 'Manga',     icone: '🥭', classe: 'manga',    grupo: 'fruta', emoji: '🥭', espacamento: 8, producao: 100, modo: 'sitio' },
-  { id: 'goiaba',   nome: 'Goiaba',    icone: '🍈', classe: 'goiaba',   grupo: 'fruta', emoji: '🍈', espacamento: 5, producao: 60, modo: 'sitio' },
-  { id: 'maracuja', nome: 'Maracujá',  icone: '🟡', classe: 'maracuja', grupo: 'fruta', emoji: '🟡', espacamento: 3, producao: 40, modo: 'sitio' },
-  { id: 'cupuacu',  nome: 'Cupuaçu',   icone: '🟤', classe: 'cupuacu',  grupo: 'fruta', emoji: '🟤', espacamento: 6, producao: 50, modo: 'sitio' },
-  { id: 'graviola', nome: 'Graviola',  icone: '🟢', classe: 'graviola', grupo: 'fruta', emoji: '🍏', espacamento: 6, producao: 70, modo: 'sitio' },
-
-  // ===== CONSTRUÇÃO (modo casa) =====
-  { id: 'parede',    nome: 'Parede',      icone: '🧱', classe: 'parede',    grupo: 'construcao', emoji: '', modo: 'casa' },
-  { id: 'divisoria', nome: 'Divisória',   icone: '▫️', classe: 'divisoria', grupo: 'construcao', emoji: '', modo: 'casa' },
-  { id: 'porta',     nome: 'Porta',       icone: '🚪', classe: 'porta',     grupo: 'construcao', emoji: '', modo: 'casa' },
-  { id: 'janela',    nome: 'Janela',      icone: '🪟', classe: 'janela',    grupo: 'construcao', emoji: '', modo: 'casa' },
-  { id: 'piso',      nome: 'Piso',        icone: '⬜', classe: 'piso',      grupo: 'construcao', emoji: '', modo: 'casa' },
-
-  // ===== AMBIENTES (modo casa) =====
-  { id: 'piso_sala',    nome: 'Sala',       icone: '🛋️', classe: 'piso', grupo: 'ambiente', emoji: '🛋️', corAmbiente: true, modo: 'casa' },
-  { id: 'piso_quarto',  nome: 'Quarto',     icone: '🛏️', classe: 'piso', grupo: 'ambiente', emoji: '🛏️', corAmbiente: true, modo: 'casa' },
-  { id: 'piso_cozinha', nome: 'Cozinha',    icone: '🍳', classe: 'piso', grupo: 'ambiente', emoji: '🍳', corAmbiente: true, modo: 'casa' },
-  { id: 'piso_banheiro',nome: 'Banheiro',   icone: '🚽', classe: 'piso', grupo: 'ambiente', emoji: '🚽', corAmbiente: true, modo: 'casa' },
-  { id: 'piso_area',    nome: 'Área serviço', icone: '🧺', classe: 'piso', grupo: 'ambiente', emoji: '🧺', corAmbiente: true, modo: 'casa' },
-
-  // ===== EXTERNO (modo casa) =====
-  { id: 'grama_casa',   nome: 'Grama',      icone: '🟩', classe: 'grama',   grupo: 'externo', emoji: '', modo: 'casa' },
-  { id: 'terra_casa',   nome: 'Terra',      icone: '🟫', classe: 'terra',   grupo: 'externo', emoji: '', modo: 'casa' },
-  { id: 'caminho_casa', nome: 'Caminho',    icone: '🛤️', classe: 'caminho', grupo: 'externo', emoji: '', modo: 'casa' },
-  { id: 'piscina',      nome: 'Piscina',    icone: '🏊', classe: 'agua',    grupo: 'externo', emoji: '🏊', modo: 'casa' },
-  { id: 'jardim',       nome: 'Jardim',     icone: '🌷', classe: 'grama',   grupo: 'externo', emoji: '🌷', modo: 'casa' },
-  { id: 'arvore_casa',  nome: 'Árvore',     icone: '🌳', classe: 'grama',   grupo: 'externo', emoji: '🌳', modo: 'casa' },
-];
-
-let modoAtual = 'sitio'; // 'sitio' ou 'casa'
-let ferramentaAtual = 'marcar';
-let grid = [];
-let ativo = [];
-let larguraAtual = 30;
-let alturaAtual = 25;
-let pintando = false;
-let mostrarAlcance = false;
-let sitiosSalvos = [];
-let idSitioAtual = null;
-
-// ============================================================
-//  MODO SÍTIO / CASA
-// ============================================================
-window.mudarModo = function(novoModo) {
-  modoAtual = novoModo;
-  document.getElementById('modoSitio').style.display = novoModo === 'sitio' ? 'block' : 'none';
-  document.getElementById('modoCasa').style.display = novoModo === 'casa' ? 'block' : 'none';
-  document.getElementById('modoSitioBtn').classList.toggle('ativo', novoModo === 'sitio');
-  document.getElementById('modoCasaBtn').classList.toggle('ativo', novoModo === 'casa');
-  // Reseta ferramenta para 'marcar'
-  ferramentaAtual = 'marcar';
-  montarFerramentas();
-};
-
-function montarFerramentas() {
-  const grupos = {
-    // Modo sítio
-    area:          'ferramentasArea',
-    terreno:       'ferramentasTerreno',
-    estrutura:     'ferramentasEstruturas',
-    irrigacao:     'ferramentasIrrigacao',
-    fruta:         'ferramentasFrutas',
-    // Modo casa
-    areaCasa:      'ferramentasAreaCasa',
-    construcao:    'ferramentasConstrucao',
-    ambiente:      'ferramentasAmbientes',
-    externo:       'ferramentasExterno',
-  };
-
-  Object.entries(grupos).forEach(([grupo, containerId]) => {
-    const el = document.getElementById(containerId);
-    if (!el) return;
-    el.innerHTML = '';
-
-    // Ferramentas do grupo (comuns + do modo atual)
-    let lista = [];
-    if (grupo === 'area') {
-      lista = FERRAMENTAS.filter(f => f.grupo === 'area');
-    } else if (grupo === 'areaCasa') {
-      lista = FERRAMENTAS.filter(f => f.grupo === 'area');
-    } else {
-      lista = FERRAMENTAS.filter(f => f.grupo === grupo && f.modo === modoAtual);
-    }
-
-    lista.forEach(f => {
-      const div = document.createElement('div');
-      div.className = 'ferramenta' + (f.id === ferramentaAtual ? ' ativa' : '');
-      const extra = f.espacamento ? ` <span style="opacity:.5">~${f.espacamento}m</span>` : '';
-      div.innerHTML = `<span class="icone">${f.icone}</span><span>${f.nome}${extra}</span>`;
-      div.onclick = () => {
-        ferramentaAtual = f.id;
-        montarFerramentas();
-      };
-      el.appendChild(div);
-    });
-  });
+const statusEl = document.getElementById('status');
+function setStatus(msg, tipo = '') {
+  statusEl.textContent = msg;
+  statusEl.className = tipo;
 }
 
-// ============================================================
-//  TERRENO
-// ============================================================
-function criarTerreno() {
-  larguraAtual = Math.max(5, Math.min(80, +document.getElementById('largura').value || 30));
-  alturaAtual  = Math.max(5, Math.min(80, +document.getElementById('altura').value || 25));
+// ===== FORMATAÇÃO =====
+const fmt = (n) => 'R$ ' + Number(n).toFixed(2).replace('.', ',');
 
-  const oldGrid = grid;
-  const oldAtivo = ativo;
-  const oldW = grid[0]?.length || 0;
-  const oldH = grid.length || 0;
+// ===== ADICIONAR =====
+async function adicionar() {
+  const nome = document.getElementById('nome').value.trim();
+  const preco = parseFloat(document.getElementById('preco').value) || 0;
+  const qtd = parseInt(document.getElementById('qtd').value) || 1;
 
-  grid = Array.from({length: alturaAtual}, (_, y) =>
-    Array.from({length: larguraAtual}, (_, x) => {
-      if (y < oldH && x < oldW) return oldGrid[y][x];
-      return 'grama';
-    })
-  );
-  ativo = Array.from({length: alturaAtual}, (_, y) =>
-    Array.from({length: larguraAtual}, (_, x) => {
-      if (y < oldH && x < oldW) return oldAtivo[y][x];
-      return true;
-    })
-  );
-  render();
-}
+  if (!nome) { alert('Digite o nome do item.'); return; }
+  if (preco <= 0) { alert('Digite um preço válido.'); return; }
 
-function marcarTudo() {
-  for (let y = 0; y < alturaAtual; y++)
-    for (let x = 0; x < larguraAtual; x++) ativo[y][x] = true;
-  render();
-}
-function desmarcarTudo() {
-  for (let y = 0; y < alturaAtual; y++)
-    for (let x = 0; x < larguraAtual; x++) ativo[y][x] = false;
-  render();
-}
-
-function render() {
-  mostrarAlcance = document.getElementById('mostrarAlcance')?.checked || false;
-  const terr = document.getElementById('terreno');
-  terr.style.gridTemplateColumns = `repeat(${larguraAtual}, 26px)`;
-  terr.innerHTML = '';
-
-  const alcance = new Set();
-  if (mostrarAlcance) {
-    for (let y = 0; y < alturaAtual; y++)
-      for (let x = 0; x < larguraAtual; x++)
-        if (grid[y][x] === 'mangueira') {
-          for (let dy = -2; dy <= 2; dy++)
-            for (let dx = -2; dx <= 2; dx++) {
-              const ny = y + dy, nx = x + dx;
-              if (ny >= 0 && ny < alturaAtual && nx >= 0 && nx < larguraAtual)
-                alcance.add(ny * larguraAtual + nx);
-            }
-        }
-  }
-
-  for (let y = 0; y < alturaAtual; y++) {
-    for (let x = 0; x < larguraAtual; x++) {
-      const cel = document.createElement('div');
-      const tipoId = grid[y][x];
-      const f = FERRAMENTAS.find(t => t.id === tipoId) || FERRAMENTAS.find(t => t.id === 'grama');
-      cel.className = 'celula ' + (f ? f.classe : 'grama');
-      if (!ativo[y][x]) cel.classList.add('fora');
-      if (mostrarAlcance && alcance.has(y * larguraAtual + x) && tipoId !== 'mangueira')
-        cel.classList.add('alcance');
-      if (f && f.emoji) cel.textContent = f.emoji;
-      cel.title = f ? f.nome : '';
-
-      if (tipoId === 'mangueira') {
-        const viz = (nx, ny) => nx>=0 && nx<larguraAtual && ny>=0 && ny<alturaAtual && grid[ny][nx] === 'mangueira';
-        const e = viz(x-1,y), d = viz(x+1,y), c = viz(x,y-1), b = viz(x,y+1);
-        if ((e && d) || (!e && !d)) cel.classList.add('irriga-h');
-        if ((c && b) || (!c && !b)) cel.classList.add('irriga-v');
-      }
-
-      cel.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-        pintando = true;
-        if (e.button === 2) apagarCelula(x, y);
-        else pintarCelula(x, y);
-      });
-      cel.addEventListener('mouseenter', () => {
-        if (pintando) pintarCelula(x, y);
-      });
-
-      terr.appendChild(cel);
-    }
-  }
-  atualizarEstatisticas();
-}
-
-function pintarCelula(x, y) {
-  const f = FERRAMENTAS.find(t => t.id === ferramentaAtual);
-  if (!f) return;
-
-  if (f.acao === 'marcar') {
-    if (!ativo[y][x]) { ativo[y][x] = true; atualizarCelulaDOM(x, y); atualizarEstatisticas(); }
-    return;
-  }
-  if (f.acao === 'desmarcar') {
-    if (ativo[y][x]) {
-      ativo[y][x] = false;
-      grid[y][x] = 'grama';
-      atualizarCelulaDOM(x, y);
-      atualizarEstatisticas();
-    }
-    return;
-  }
-
-  if (!ativo[y][x]) return;
-  if (grid[y][x] === f.id) return;
-  grid[y][x] = f.id;
-  atualizarCelulaDOM(x, y);
-  atualizarEstatisticas();
-}
-
-function apagarCelula(x, y) {
-  if (!ativo[y][x]) return;
-  grid[y][x] = 'grama';
-  atualizarCelulaDOM(x, y);
-  atualizarEstatisticas();
-}
-
-function atualizarCelulaDOM(x, y) {
-  const terr = document.getElementById('terreno');
-  const idx = y * larguraAtual + x;
-  const cel = terr.children[idx];
-  if (!cel) return;
-
-  const tipoId = grid[y][x];
-  const f = FERRAMENTAS.find(t => t.id === tipoId) || FERRAMENTAS.find(t => t.id === 'grama');
-  cel.className = 'celula ' + (f ? f.classe : 'grama');
-  if (!ativo[y][x]) cel.classList.add('fora');
-  cel.textContent = (f && f.emoji) ? f.emoji : '';
-  cel.title = f ? f.nome : '';
-}
-
-// ============================================================
-//  ESTATÍSTICAS
-// ============================================================
-function atualizarEstatisticas() {
-  const contagem = {};
-  let areaAtiva = 0;
-  for (let y = 0; y < alturaAtual; y++)
-    for (let x = 0; x < larguraAtual; x++) {
-      if (ativo[y][x]) areaAtiva++;
-      const t = grid[y][x];
-      if (ativo[y][x]) contagem[t] = (contagem[t] || 0) + 1;
-    }
-
-  const totalGrade = larguraAtual * alturaAtual;
-  let html = `<div class="estatistica"><span>📐 Área ativa</span><b>${areaAtiva} m²</b></div>`;
-  html += `<div class="estatistica"><span>🗺️ Grade total</span><b>${totalGrade} m²</b></div>`;
-
-  // ===== Frutíferas =====
-  const frutas = FERRAMENTAS.filter(f => f.grupo === 'fruta');
-  const temFruta = frutas.some(f => (contagem[f.id] || 0) > 0);
-  if (temFruta) {
-    html += `<div style="margin-top:8px; font-size:.75em; color:#f1c40f; font-weight:bold;">🌳 FRUTÍFERAS</div>`;
-    let totalProducao = 0;
-    frutas.forEach(f => {
-      const qtd = contagem[f.id] || 0;
-      if (qtd > 0) {
-        const prod = qtd * f.producao;
-        totalProducao += prod;
-        html += `<div class="estatistica"><span>${f.icone} ${f.nome}</span><b>${qtd} pés</b></div>`;
-      }
-    });
-    html += `<div class="estatistica" style="border:none; color:#2ecc71;">
-      <span>🌾 Produção estimada/ano</span><b>~${totalProducao} kg</b></div>`;
-  }
-
-  // ===== Estruturas =====
-  const estruturas = FERRAMENTAS.filter(f => f.grupo === 'estrutura');
-  if (estruturas.some(f => (contagem[f.id] || 0) > 0)) {
-    html += `<div style="margin-top:8px; font-size:.75em; color:#f1c40f; font-weight:bold;">🏠 ESTRUTURAS</div>`;
-    estruturas.forEach(f => {
-      const qtd = contagem[f.id] || 0;
-      if (qtd > 0) html += `<div class="estatistica"><span>${f.icone} ${f.nome}</span><b>${qtd} m²</b></div>`;
-    });
-  }
-
-  // ===== Construção (paredes, portas, janelas, piso) =====
-  const qtdParede = (contagem['parede'] || 0) + (contagem['divisoria'] || 0);
-  const qtdPorta = contagem['porta'] || 0;
-  const qtdJanela = contagem['janela'] || 0;
-  const qtdPiso = (contagem['piso'] || 0) +
-                  (contagem['piso_sala'] || 0) +
-                  (contagem['piso_quarto'] || 0) +
-                  (contagem['piso_cozinha'] || 0) +
-                  (contagem['piso_banheiro'] || 0) +
-                  (contagem['piso_area'] || 0);
-
-  if (qtdParede + qtdPorta + qtdJanela + qtdPiso > 0) {
-    html += `<div style="margin-top:8px; font-size:.75em; color:#f1c40f; font-weight:bold;">🧱 CONSTRUÇÃO</div>`;
-    if (qtdParede > 0) html += `<div class="estatistica"><span>🧱 Paredes</span><b>${qtdParede} m</b></div>`;
-    if (qtdPorta > 0)  html += `<div class="estatistica"><span>🚪 Portas</span><b>${qtdPorta}</b></div>`;
-    if (qtdJanela > 0) html += `<div class="estatistica"><span>🪟 Janelas</span><b>${qtdJanela}</b></div>`;
-    if (qtdPiso > 0)   html += `<div class="estatistica"><span>⬜ Piso total</span><b>${qtdPiso} m²</b></div>`;
-  }
-
-  // ===== Ambientes (casa) =====
-  const ambientes = FERRAMENTAS.filter(f => f.grupo === 'ambiente');
-  if (ambientes.some(f => (contagem[f.id] || 0) > 0)) {
-    html += `<div style="margin-top:8px; font-size:.75em; color:#f1c40f; font-weight:bold;">🛋️ AMBIENTES</div>`;
-    ambientes.forEach(f => {
-      const qtd = contagem[f.id] || 0;
-      if (qtd > 0) html += `<div class="estatistica"><span>${f.icone} ${f.nome}</span><b>${qtd} m²</b></div>`;
-    });
-  }
-
-  // ===== Irrigação =====
-  const qtdMang = contagem['mangueira'] || 0;
-  if (qtdMang > 0) {
-    html += `<div style="margin-top:8px; font-size:.75em; color:#f1c40f; font-weight:bold;">💧 IRRIGAÇÃO</div>`;
-    html += `<div class="estatistica"><span>🚿 Mangueira</span><b>${qtdMang} m</b></div>`;
-  }
-
-  document.getElementById('estatisticas').innerHTML = html;
-}
-
-// ============================================================
-//  FIREBASE
-// ============================================================
-const statusEl = document.getElementById('statusConexao');
-
-function setStatus(texto, tipo) {
-  statusEl.textContent = texto;
-  statusEl.className = 'status-conexao' + (tipo ? ' ' + tipo : '');
-}
-
-function matrizParaString(matriz) {
-  return matriz.map(linha => linha.join(',')).join('|');
-}
-
-function stringParaMatriz(str, largura, altura, valorPadrao) {
-  if (!str) {
-    return Array.from({length: altura}, () => Array(largura).fill(valorPadrao));
-  }
-  const linhas = str.split('|').map(l => l.split(','));
-  const resultado = [];
-  for (let y = 0; y < altura; y++) {
-    const linha = [];
-    for (let x = 0; x < largura; x++) {
-      linha.push(linhas[y] && linhas[y][x] !== undefined ? linhas[y][x] : valorPadrao);
-    }
-    resultado.push(linha);
-  }
-  return resultado;
-}
-
-async function salvarNoFirebase() {
-  const nome = document.getElementById('nomeSitio').value.trim();
-  if (!nome) {
-    alert('⚠️ Digite um nome para o projeto antes de salvar.');
-    return;
-  }
-
-  let gridStr, ativoStr;
   try {
-    gridStr = grid.map(linha => linha.join(',')).join('|');
-    ativoStr = ativo.map(linha => linha.map(v => v ? '1' : '0').join(',')).join('|');
+    await addDoc(collection(db, COL), {
+      nome,
+      preco,
+      qtd,
+      comprado: false,
+      data: new Date().toISOString()
+    });
+
+    // limpa campos
+    document.getElementById('nome').value = '';
+    document.getElementById('preco').value = '';
+    document.getElementById('qtd').value = '1';
+    document.getElementById('sugestao').innerHTML = '';
+    document.getElementById('nome').focus();
   } catch (e) {
-    setStatus('❌ Erro de conversão: ' + e.message, 'offline');
+    setStatus('❌ ' + e.message, 'erro');
+  }
+}
+
+// ===== CARREGAR HISTÓRICO =====
+function calcularHistorico(lista) {
+  const mapa = {};
+  // ordena por data (mais antigo primeiro)
+  const ordenados = [...lista].sort((a, b) =>
+    (a.data || '').localeCompare(b.data || '')
+  );
+  ordenados.forEach(item => {
+    const chave = item.nome.toLowerCase().trim();
+    if (!mapa[chave] || (item.data || '') > (mapa[chave].data || '')) {
+      mapa[chave] = { nome: item.nome, preco: item.preco, data: item.data };
+    }
+  });
+  return Object.values(mapa);
+}
+
+// ===== RENDERIZAR LISTA =====
+function renderizar() {
+  const el = document.getElementById('lista');
+  const ativos = itens.filter(i => !i.comprado);
+  const comprados = itens.filter(i => i.comprado);
+
+  if (itens.length === 0) {
+    el.innerHTML = '<div class="vazio">Nenhum item na lista</div>';
+    document.getElementById('total').textContent = fmt(0);
     return;
   }
 
-  const registro = {
-    nome: String(nome),
-    largura: Number(larguraAtual),
-    altura: Number(alturaAtual),
-    grid: String(gridStr),
-    ativo: String(ativoStr),
-    modo: modoAtual,
-    atualizadoEm: new Date().toISOString()
-  };
+  const renderItem = (item) => {
+    // busca último preço no histórico
+    const h = historico.find(x => x.nome.toLowerCase() === item.nome.toLowerCase());
+    const ultimoPreco = h ? h.preco : null;
+    const mudou = ultimoPreco && ultimoPreco !== item.preco;
 
-  try {
-    if (idSitioAtual) {
-      await updateDoc(doc(db, COLECAO_SITIOS, idSitioAtual), registro);
-      setStatus('✅ Projeto atualizado!', 'online');
-    } else {
-      registro.criadoEm = new Date().toISOString();
-      const ref = await addDoc(collection(db, COLECAO_SITIOS), registro);
-      idSitioAtual = ref.id;
-      setStatus('✅ Projeto salvo no Firebase!', 'online');
-    }
-    document.getElementById('nomeSitio').value = '';
-  } catch (error) {
-    console.error('Erro ao salvar:', error);
-    setStatus('❌ Erro ao salvar: ' + error.message, 'offline');
-  }
-}
-
-async function carregarSitio(id) {
-  try {
-    const snap = await getDocs(collection(db, COLECAO_SITIOS));
-    let encontrado = null;
-    snap.forEach(d => { if (d.id === id) encontrado = { id: d.id, ...d.data() }; });
-    if (!encontrado) return;
-
-    larguraAtual = encontrado.largura;
-    alturaAtual = encontrado.altura;
-    grid = stringParaMatriz(encontrado.grid, larguraAtual, alturaAtual, 'grama');
-
-    const ativoStr = stringParaMatriz(encontrado.ativo, larguraAtual, alturaAtual, '1');
-    ativo = ativoStr.map(linha => linha.map(v => v === '1' || v === 'true' || v === true));
-
-    document.getElementById('largura').value = larguraAtual;
-    document.getElementById('altura').value = alturaAtual;
-    document.getElementById('nomeSitio').value = encontrado.nome;
-    idSitioAtual = id;
-    render();
-    renderizarListaSitios();
-    setStatus(`📂 "${encontrado.nome}" carregado`, 'online');
-  } catch (error) {
-    console.error('Erro ao carregar:', error);
-    alert('Erro ao carregar: ' + error.message);
-  }
-}
-
-async function deletarSitio(id, nome) {
-  if (!confirm(`Excluir o projeto "${nome}"?`)) return;
-  try {
-    await deleteDoc(doc(db, COLECAO_SITIOS, id));
-    if (idSitioAtual === id) {
-      idSitioAtual = null;
-      document.getElementById('nomeSitio').value = '';
-    }
-    setStatus('🗑️ Projeto excluído', 'online');
-  } catch (error) {
-    alert('Erro ao excluir: ' + error.message);
-  }
-}
-
-function renderizarListaSitios() {
-  const el = document.getElementById('listaSitios');
-  if (sitiosSalvos.length === 0) {
-    el.innerHTML = `<div style="text-align:center; padding:15px; font-size:0.8em; opacity:0.6;">Nenhum projeto salvo ainda.</div>`;
-    return;
-  }
-
-  el.innerHTML = sitiosSalvos.map(s => {
-    const data = s.atualizadoEm ? new Date(s.atualizadoEm).toLocaleDateString('pt-BR') : '—';
-    const ativoCls = s.id === idSitioAtual ? ' ativo' : '';
-    const icone = s.modo === 'casa' ? '🏠' : '🌳';
     return `
-      <div class="item-sitio${ativoCls}" onclick="window.carregarSitio('${s.id}')">
+      <div class="item ${item.comprado ? 'comprado' : ''}">
+        <input type="checkbox" ${item.comprado ? 'checked' : ''}
+               onchange="window.__toggle('${item.id}', ${!item.comprado})">
         <div>
-          <div class="nome">${icone} ${s.nome}</div>
-          <div class="data">${s.largura}×${s.altura}m • ${data}</div>
+          <div class="nome">${item.nome}</div>
+          <div class="detalhe">
+            ${item.qtd}x ${fmt(item.preco)}
+            ${mudou ? `<span style="color:#f87171;"> (antes ${fmt(ultimoPreco)})</span>` : ''}
+          </div>
         </div>
-        <button class="btn-del" onclick="event.stopPropagation(); window.deletarSitio('${s.id}', '${s.nome.replace(/'/g, "\\'")}')">🗑️</button>
+        <div class="preco-atual">${fmt(item.preco * item.qtd)}</div>
+        <button class="btn-del" onclick="window.__excluir('${item.id}')">✕</button>
       </div>
     `;
-  }).join('');
-}
-
-function escutarSitios() {
-  setStatus('🔄 Conectando...', '');
-  const q = query(collection(db, COLECAO_SITIOS), orderBy('atualizadoEm', 'desc'));
-  onSnapshot(q, (snapshot) => {
-    sitiosSalvos = [];
-    snapshot.forEach(d => sitiosSalvos.push({ id: d.id, ...d.data() }));
-    renderizarListaSitios();
-    setStatus('✅ Conectado ao Firebase', 'online');
-  }, (error) => {
-    console.error('Erro na conexão:', error);
-    setStatus('❌ Sem conexão: ' + error.message, 'offline');
-  });
-}
-
-// ============================================================
-//  EXPORTAR PDF
-// ============================================================
-window.exportarPDF = async function() {
-  const nomeSitio = document.getElementById('nomeSitio').value.trim() || 'Projeto sem nome';
-
-  // ============ 1. DESENHA TUDO EM CANVAS ============
-  const CELL = 30;
-  const canvas = document.createElement('canvas');
-  canvas.width = larguraAtual * CELL;
-  canvas.height = alturaAtual * CELL;
-  const ctx = canvas.getContext('2d');
-
-  const CORES = {
-    grama:    '#7cb342', terra:    '#8d6e63', agua:     '#42a5f5',
-    areia:    '#fdd835', pedra:    '#9e9e9e', caminho:  '#bcaaa4',
-    casa:     '#e57373', horta:    '#a1887f', poco:     '#90a4ae',
-    galpao:   '#a1887f', acerola:  '#ff5252', manga:    '#ffb300',
-    goiaba:   '#e57373', maracuja: '#ffd54f', cupuacu:  '#8d6e63',
-    graviola: '#66bb6a', mangueira:'#7cb342',
-    parede:    '#e0e0e0', divisoria: '#e0e0e0', porta: '#e0e0e0',
-    janela:    '#e0e0e0', piso: '#cfd8dc',
-    piso_sala: '#cfd8dc', piso_quarto: '#cfd8dc', piso_cozinha: '#cfd8dc',
-    piso_banheiro: '#cfd8dc', piso_area: '#cfd8dc',
-    grama_casa: '#7cb342', terra_casa: '#8d6e63', caminho_casa: '#bcaaa4',
-    piscina: '#42a5f5', jardim: '#7cb342', arvore_casa: '#7cb342',
   };
 
-  // Fundo geral (só a parte ativa do sítio)
-  ctx.fillStyle = '#1e2b38';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  el.innerHTML = ativos.map(renderItem).join('') +
+    (comprados.length ? `<div style="font-size:.7em; color:#64748b; margin:10px 0 4px;">— comprados —</div>` +
+      comprados.map(renderItem).join('') : '');
 
-  for (let y = 0; y < alturaAtual; y++) {
-    for (let x = 0; x < larguraAtual; x++) {
-      const tipo = grid[y][x];
-      const dentro = ativo[y][x];
-      const px = x * CELL;
-      const py = y * CELL;
+  // total
+  const total = ativos.reduce((s, i) => s + i.preco * i.qtd, 0);
+  document.getElementById('total').textContent = fmt(total);
 
-      if (!dentro) {
-        ctx.fillStyle = '#1a1a1a';
-        ctx.globalAlpha = 0.35;
-        ctx.fillRect(px + 1, py + 1, CELL - 2, CELL - 2);
-        ctx.globalAlpha = 1;
-        continue;
-      }
-
-      // Cor de fundo
-      ctx.fillStyle = CORES[tipo] || '#7cb342';
-      ctx.fillRect(px + 1, py + 1, CELL - 2, CELL - 2);
-
-      // Desenhos especiais
-      if (tipo === 'parede') {
-        ctx.fillStyle = '#222';
-        ctx.fillRect(px + 1, py + 1, CELL - 2, CELL - 2);
-      } else if (tipo === 'divisoria') {
-        ctx.fillStyle = '#444';
-        ctx.fillRect(px + CELL * 0.4, py + CELL * 0.4, CELL * 0.2, CELL * 0.2);
-      } else if (tipo === 'porta') {
-        ctx.fillStyle = '#222';
-        ctx.fillRect(px + 1, py + 1, CELL - 2, CELL - 2);
-        // Vão marrom
-        ctx.fillStyle = '#8d6e63';
-        ctx.fillRect(px + CELL * 0.3, py + 1, CELL * 0.4, CELL - 2);
-      } else if (tipo === 'janela') {
-        ctx.fillStyle = '#222';
-        ctx.fillRect(px + 1, py + 1, CELL - 2, CELL - 2);
-        // Linha azul
-        ctx.fillStyle = '#4fc3f7';
-        ctx.fillRect(px + 1, py + CELL * 0.4, CELL - 2, CELL * 0.2);
-      } else if (tipo === 'piso' || tipo.startsWith('piso_')) {
-        // Piso com borda tracejada
-        ctx.strokeStyle = '#90a4ae';
-        ctx.setLineDash([3, 3]);
-        ctx.strokeRect(px + 3, py + 3, CELL - 6, CELL - 6);
-        ctx.setLineDash([]);
-      } else if (tipo === 'mangueira') {
-        ctx.fillStyle = '#00bcd4';
-        ctx.beginPath();
-        ctx.arc(px + CELL / 2, py + CELL / 2, CELL * 0.15, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#00e5ff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-
-      // Emoji
-      const f = FERRAMENTAS.find(t => t.id === tipo);
-      if (f && f.emoji) {
-        ctx.font = `${Math.floor(CELL * 0.7)}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(f.emoji, px + CELL / 2, py + CELL / 2 + 1);
-      }
-    }
+  // histórico
+  const histEl = document.getElementById('historico');
+  if (historico.length === 0) {
+    histEl.innerHTML = '<div class="vazio">Sem histórico ainda</div>';
+  } else {
+    histEl.innerHTML = historico
+      .sort((a, b) => (b.data || '').localeCompare(a.data || ''))
+      .slice(0, 20)
+      .map(h => `
+        <div class="historico-linha">
+          <span>${h.nome}</span>
+          <b style="color:#fbbf24;">${fmt(h.preco)}</b>
+        </div>
+      `).join('');
   }
+}
 
-  // ============ 2. ESTATÍSTICAS EM TEXTO ============
-  const contagem = {};
-  let areaAtiva = 0;
-  for (let y = 0; y < alturaAtual; y++)
-    for (let x = 0; x < larguraAtual; x++) {
-      if (ativo[y][x]) areaAtiva++;
-      const t = grid[y][x];
-      if (ativo[y][x]) contagem[t] = (contagem[t] || 0) + 1;
-    }
-
-  const linhasResumo = [];
-  linhasResumo.push(`Area ativa: ${areaAtiva} m2`);
-  linhasResumo.push(`Grade total: ${larguraAtual * alturaAtual} m2`);
-  linhasResumo.push('');
-
-  // Frutíferas
-  const frutas = FERRAMENTAS.filter(f => f.grupo === 'fruta');
-  if (frutas.some(f => (contagem[f.id] || 0) > 0)) {
-    linhasResumo.push('FRUTIFERAS:');
-    let totalProducao = 0;
-    frutas.forEach(f => {
-      const qtd = contagem[f.id] || 0;
-      if (qtd > 0) {
-        totalProducao += qtd * f.producao;
-        linhasResumo.push(`  - ${f.nome}: ${qtd} pes`);
-      }
-    });
-    linhasResumo.push(`  Producao estimada/ano: ~${totalProducao} kg`);
-    linhasResumo.push('');
+// ===== AÇÕES =====
+async function toggle(id, novoComprado) {
+  try {
+    await updateDoc(doc(db, COL, id), { comprado: novoComprado });
+  } catch (e) {
+    setStatus('❌ ' + e.message, 'erro');
   }
+}
 
-  // Estruturas
-  const estruturas = FERRAMENTAS.filter(f => f.grupo === 'estrutura');
-  if (estruturas.some(f => (contagem[f.id] || 0) > 0)) {
-    linhasResumo.push('ESTRUTURAS:');
-    estruturas.forEach(f => {
-      const qtd = contagem[f.id] || 0;
-      if (qtd > 0) linhasResumo.push(`  - ${f.nome}: ${qtd} m2`);
-    });
-    linhasResumo.push('');
+async function excluir(id) {
+  if (!confirm('Excluir este item?')) return;
+  try {
+    await deleteDoc(doc(db, COL, id));
+  } catch (e) {
+    setStatus('❌ ' + e.message, 'erro');
   }
+}
 
-  // Construção
-  const qtdParede = (contagem['parede'] || 0) + (contagem['divisoria'] || 0);
-  const qtdPorta = contagem['porta'] || 0;
-  const qtdJanela = contagem['janela'] || 0;
-  const qtdPiso = (contagem['piso'] || 0) +
-                  (contagem['piso_sala'] || 0) +
-                  (contagem['piso_quarto'] || 0) +
-                  (contagem['piso_cozinha'] || 0) +
-                  (contagem['piso_banheiro'] || 0) +
-                  (contagem['piso_area'] || 0);
-
-  if (qtdParede + qtdPorta + qtdJanela + qtdPiso > 0) {
-    linhasResumo.push('CONSTRUCAO:');
-    if (qtdParede > 0) linhasResumo.push(`  - Paredes: ${qtdParede} m`);
-    if (qtdPorta > 0)  linhasResumo.push(`  - Portas: ${qtdPorta}`);
-    if (qtdJanela > 0) linhasResumo.push(`  - Janelas: ${qtdJanela}`);
-    if (qtdPiso > 0)   linhasResumo.push(`  - Piso total: ${qtdPiso} m2`);
-    linhasResumo.push('');
+async function limparComprados() {
+  const comprados = itens.filter(i => i.comprado);
+  if (!comprados.length) return;
+  if (!confirm(`Excluir ${comprados.length} item(ns) comprado(s)?`)) return;
+  try {
+    await Promise.all(comprados.map(i => deleteDoc(doc(db, COL, i.id))));
+  } catch (e) {
+    setStatus('❌ ' + e.message, 'erro');
   }
+}
 
-  // Ambientes
-  const ambientes = FERRAMENTAS.filter(f => f.grupo === 'ambiente');
-  if (ambientes.some(f => (contagem[f.id] || 0) > 0)) {
-    linhasResumo.push('AMBIENTES:');
-    ambientes.forEach(f => {
-      const qtd = contagem[f.id] || 0;
-      if (qtd > 0) linhasResumo.push(`  - ${f.nome}: ${qtd} m2`);
-    });
-    linhasResumo.push('');
+// ===== SUGESTÃO AO DIGITAR =====
+document.getElementById('nome').addEventListener('input', (e) => {
+  const v = e.target.value.toLowerCase().trim();
+  const sug = document.getElementById('sugestao');
+  if (!v) { sug.innerHTML = ''; return; }
+
+  const encontrados = historico.filter(h => h.nome.toLowerCase().includes(v));
+  if (encontrados.length === 0) {
+    sug.innerHTML = '';
+    return;
   }
-
-  // Irrigação
-  const qtdMang = contagem['mangueira'] || 0;
-  if (qtdMang > 0) {
-    linhasResumo.push('IRRIGACAO:');
-    linhasResumo.push(`  - Mangueira: ${qtdMang} m`);
+  const melhor = encontrados[0];
+  sug.innerHTML = `💡 Último preço de <b>${melhor.nome}</b>: ${fmt(melhor.preco)}`;
+  // preenche o preço automaticamente
+  if (document.getElementById('preco').value === '') {
+    document.getElementById('preco').value = melhor.preco;
   }
-
-  // ============ 3. CRIA O PDF ============
-  const { jsPDF } = window.jspdf;
-  const proporcaoTerreno = larguraAtual / alturaAtual;
-  const orientacao = proporcaoTerreno > 1.2 ? 'l' : 'p';
-  const pdf = new jsPDF(orientacao, 'mm', 'a4');
-
-  const pdfLargura = pdf.internal.pageSize.getWidth();
-  const pdfAltura = pdf.internal.pageSize.getHeight();
-  const margem = 12;
-
-  let yAtual = margem;
-  pdf.setFontSize(18);
-  pdf.setTextColor(44, 62, 80);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(`Projeto: ${nomeSitio}`, margem, yAtual);
-  yAtual += 7;
-
-  pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(100, 100, 100);
-  pdf.text(
-    `Gerado em ${new Date().toLocaleString('pt-BR')}  |  Dimensoes: ${larguraAtual}m x ${alturaAtual}m  |  Modo: ${modoAtual === 'casa' ? 'Casa' : 'Sitio'}`,
-    margem, yAtual
-  );
-  yAtual += 8;
-
-  pdf.setDrawColor(44, 62, 80);
-  pdf.setLineWidth(0.6);
-  pdf.line(margem, yAtual, pdfLargura - margem, yAtual);
-  yAtual += 6;
-
-  // Escala
-  const alturaReservadaStats = orientacao === 'l' ? 55 : 75;
-  const larguraDisponivel = pdfLargura - 2 * margem;
-  const alturaDisponivel = pdfAltura - yAtual - alturaReservadaStats - margem;
-
-  const proporcaoImg = canvas.width / canvas.height;
-  let larguraImg = larguraDisponivel;
-  let alturaImg = larguraImg / proporcaoImg;
-
-  if (alturaImg > alturaDisponivel) {
-    alturaImg = alturaDisponivel;
-    larguraImg = alturaImg * proporcaoImg;
-  }
-
-  const xImg = margem + (larguraDisponivel - larguraImg) / 2;
-  const imgData = canvas.toDataURL('image/png');
-
-  pdf.setDrawColor(30, 43, 56);
-  pdf.setLineWidth(0.8);
-  pdf.rect(xImg - 1, yAtual - 1, larguraImg + 2, alturaImg + 2);
-
-  pdf.addImage(imgData, 'PNG', xImg, yAtual, larguraImg, alturaImg);
-  yAtual += alturaImg + 8;
-
-  // Resumo
-  if (yAtual > pdfAltura - 40) {
-    pdf.addPage();
-    yAtual = margem;
-  }
-
-  pdf.setFontSize(12);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(44, 62, 80);
-  pdf.text('Resumo', margem, yAtual);
-  yAtual += 7;
-
-  pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(50, 50, 50);
-
-  linhasResumo.forEach(linha => {
-    if (yAtual > pdfAltura - margem) {
-      pdf.addPage();
-      yAtual = margem;
-    }
-    const cabecalhos = ['FRUTIFERAS', 'ESTRUTURAS', 'CONSTRUCAO', 'AMBIENTES', 'IRRIGACAO'];
-    if (cabecalhos.includes(linha.replace(':', ''))) {
-      pdf.setFont('helvetica', 'bold');
-      pdf.setTextColor(44, 62, 80);
-      pdf.text(linha, margem, yAtual);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(50, 50, 50);
-    } else {
-      pdf.text(linha, margem, yAtual);
-    }
-    yAtual += 5;
-  });
-
-  // Legenda
-  yAtual += 3;
-  if (yAtual > pdfAltura - 30) {
-    pdf.addPage();
-    yAtual = margem;
-  }
-
-  pdf.setFontSize(11);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(44, 62, 80);
-  pdf.text('Legenda', margem, yAtual);
-  yAtual += 7;
-
-  pdf.setFontSize(9);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(60, 60, 60);
-
-  const legendas = [
-    { cor: '#7cb342', texto: 'Grama' },
-    { cor: '#8d6e63', texto: 'Terra' },
-    { cor: '#42a5f5', texto: 'Agua' },
-    { cor: '#bcaaa4', texto: 'Caminho' },
-    { cor: '#fdd835', texto: 'Areia' },
-    { cor: '#9e9e9e', texto: 'Pedra' },
-    { cor: '#e57373', texto: 'Casa/Goiaba' },
-    { cor: '#a1887f', texto: 'Horta/Galpao' },
-    { cor: '#90a4ae', texto: 'Poco/Caixa' },
-    { cor: '#ff5252', texto: 'Acerola' },
-    { cor: '#ffb300', texto: 'Manga' },
-    { cor: '#ffd54f', texto: 'Maracuja' },
-    { cor: '#66bb6a', texto: 'Graviola' },
-    { cor: '#222222', texto: 'Parede' },
-    { cor: '#444444', texto: 'Divisoria' },
-    { cor: '#00bcd4', texto: 'Mangueira' },
-    { cor: '#cfd8dc', texto: 'Piso' },
-  ];
-
-  const cols = 4;
-  const colLargura = (pdfLargura - 2 * margem) / cols;
-  let idx = 0;
-
-  legendas.forEach(item => {
-    const col = idx % cols;
-    const row = Math.floor(idx / cols);
-    const x = margem + col * colLargura;
-    const y = yAtual + row * 6;
-
-    if (y > pdfAltura - margem) {
-      pdf.addPage();
-      yAtual = margem - row * 6;
-    }
-
-    const r = parseInt(item.cor.slice(1,3), 16);
-    const g = parseInt(item.cor.slice(3,5), 16);
-    const b = parseInt(item.cor.slice(5,7), 16);
-    pdf.setFillColor(r, g, b);
-    pdf.rect(x, y - 3, 4, 4, 'F');
-    pdf.setTextColor(60, 60, 60);
-    pdf.text(item.texto, x + 5.5, y);
-    idx++;
-  });
-
-  const nomeArquivo = nomeSitio.replace(/[^a-zA-Z0-9]/g, '_') + '.pdf';
-  pdf.save(nomeArquivo);
-
-  setStatus('📄 PDF exportado!', 'online');
-};
-
-// ============================================================
-//  NOVO / LIMPAR
-// ============================================================
-window.novoSitio = function() {
-  if (!confirm('Criar um novo projeto? O atual será descartado.')) return;
-  idSitioAtual = null;
-  document.getElementById('nomeSitio').value = '';
-  document.getElementById('largura').value = 30;
-  document.getElementById('altura').value = 25;
-  grid = [];
-  ativo = [];
-  criarTerreno();
-  renderizarListaSitios();
-  setStatus('✨ Novo projeto em branco', 'online');
-};
-
-window.limparTudo = function() {
-  if (!confirm('Apagar tudo e voltar para grama?')) return;
-  grid = Array.from({length: alturaAtual}, () => Array(larguraAtual).fill('grama'));
-  render();
-};
-
-// ============================================================
-//  EVENTOS GLOBAIS
-// ============================================================
-document.addEventListener('mouseup', () => pintando = false);
-document.addEventListener('contextmenu', e => {
-  if (e.target.closest('#terreno')) e.preventDefault();
 });
 
-window.carregarSitio = carregarSitio;
-window.deletarSitio = deletarSitio;
-window.salvarNoFirebase = salvarNoFirebase;
-window.criarTerreno = criarTerreno;
-window.marcarTudo = marcarTudo;
-window.desmarcarTudo = desmarcarTudo;
-window.render = render;
+// ===== FIRESTORE: escuta em tempo real =====
+function escutar() {
+  setStatus('🔄 Conectando...');
+  const q = query(collection(db, COL), orderBy('data', 'desc'));
 
-// Inicialização
-montarFerramentas();
-criarTerreno();
-escutarSitios();
+  onSnapshot(q, snap => {
+    itens = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    historico = calcularHistorico(itens);
+    renderizar();
+    setStatus('✅ Sincronizado', 'ok');
+  }, err => {
+    console.error(err);
+    setStatus('❌ ' + err.message, 'erro');
+  });
+}
+
+// ===== EXPOR =====
+window.adicionar = adicionar;
+window.__toggle = toggle;
+window.__excluir = excluir;
+window.limparComprados = limparComprados;
+
+// ===== START =====
+escutar();
 </script>
 </body>
 </html>
