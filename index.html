@@ -37,7 +37,29 @@
     align-items: center;
   }
 
-  /* Formulário de adicionar (em casa, sem preço) */
+  /* Abas */
+  .abas {
+    display: flex;
+    gap: 6px;
+    background: #1e293b;
+    padding: 4px;
+    border-radius: 10px;
+  }
+  .aba {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: .85em;
+    background: transparent;
+    color: #94a3b8;
+    transition: .15s;
+  }
+  .aba.ativa { background: #16a34a; color: white; }
+
+  /* Formulário */
   .form-linha {
     display: grid;
     grid-template-columns: 1fr 80px auto;
@@ -48,7 +70,7 @@
     .form-linha { grid-template-columns: 1fr 70px; }
     .form-linha button { grid-column: span 2; }
   }
-  input {
+  input[type="text"], input[type="number"] {
     padding: 10px;
     border-radius: 8px;
     border: 1px solid #334155;
@@ -73,15 +95,49 @@
   .btn-verde:hover { background: #15803d; }
   .btn-azul { background: #2563eb; }
   .btn-cinza { background: #475569; }
+  .btn-vermelho { background: #dc2626; }
 
-  #sugestao {
-    font-size: .75em;
-    color: #38bdf8;
-    padding: 4px 8px;
-    margin-bottom: 8px;
-    min-height: 20px;
+  /* Busca */
+  .busca {
+    margin-bottom: 10px;
   }
-  #sugestao b { color: #fbbf24; }
+
+  /* Catálogo / seleção */
+  .catalogo-lista {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+  }
+  .produto-sel {
+    display: grid;
+    grid-template-columns: 24px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px;
+    background: #0f172a;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: .15s;
+  }
+  .produto-sel:hover { background: #334155; }
+  .produto-sel.selecionado {
+    border-left-color: #16a34a;
+    background: #14532d33;
+  }
+  .produto-sel input[type="checkbox"] {
+    width: 20px; height: 20px; cursor: pointer; accent-color: #16a34a;
+  }
+  .produto-sel .info .nome { font-weight: 600; font-size: .9em; }
+  .produto-sel .info .det { font-size: .75em; color: #94a3b8; margin-top: 2px; }
+  .produto-sel .info .det .ultimo { color: #38bdf8; }
+  .produto-sel .qtd-input {
+    width: 60px;
+    padding: 6px;
+    font-size: .85em;
+    text-align: center;
+  }
 
   /* Item da lista */
   .item {
@@ -92,10 +148,7 @@
     overflow: hidden;
     transition: .15s;
   }
-  .item.comprado {
-    opacity: .55;
-    border-left-color: #16a34a;
-  }
+  .item.comprado { opacity: .55; border-left-color: #16a34a; }
   .item.comprado .nome { text-decoration: line-through; }
 
   .item-linha {
@@ -133,7 +186,6 @@
   }
   .item .btn-del:hover { background: #7f1d1d; }
 
-  /* Área de edição do preço (expande ao clicar) */
   .item-editor {
     display: none;
     padding: 10px;
@@ -171,7 +223,7 @@
   #status.erro { background: #7f1d1d; }
 
   .historico {
-    max-height: 200px;
+    max-height: 250px;
     overflow-y: auto;
     font-size: .8em;
   }
@@ -198,6 +250,15 @@
     margin-top: 8px;
   }
   .acoes button { flex: 1; }
+
+  .badge {
+    font-size: .7em;
+    background: #fbbf24;
+    color: #0f172a;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: bold;
+  }
 </style>
 </head>
 <body>
@@ -208,36 +269,70 @@
 
   <div id="status">🔄 Conectando...</div>
 
-  <!-- Adicionar item (em casa, só nome + qtd) -->
-  <div class="card">
-    <h2>➕ Adicionar item</h2>
-    <div class="form-linha">
-      <input type="text" id="nome" placeholder="Nome do item" autocomplete="off">
-      <input type="number" id="qtd" placeholder="Qtd" value="1" min="1" step="1">
-      <button class="btn-verde" onclick="adicionar()">Adicionar</button>
+  <!-- Abas -->
+  <div class="abas">
+    <button class="aba ativa" id="abaLista" onclick="mudarAba('lista')">📝 Lista atual</button>
+    <button class="aba" id="abaNova" onclick="mudarAba('nova')">➕ Nova lista</button>
+    <button class="aba" id="abaProdutos" onclick="mudarAba('produtos')">📦 Produtos</button>
+  </div>
+
+  <!-- ===== ABA: LISTA ATUAL ===== -->
+  <div id="telaLista">
+    <div class="card">
+      <h2>
+        <span>📝 Lista atual</span>
+        <button class="btn-cinza" style="padding:4px 10px; font-size:.75em;" onclick="limparComprados()">🧹 Limpar comprados</button>
+      </h2>
+      <div id="lista"></div>
     </div>
-    <div id="sugestao"></div>
+
+    <div class="total" style="margin-top:12px;">
+      <span>💰 Total da lista</span>
+      <b id="total">R$ 0,00</b>
+    </div>
   </div>
 
-  <!-- Lista -->
-  <div class="card">
-    <h2>
-      <span>📝 Lista</span>
-      <button class="btn-cinza" style="padding:4px 10px; font-size:.75em;" onclick="limparComprados()">🧹 Limpar comprados</button>
-    </h2>
-    <div id="lista"></div>
+  <!-- ===== ABA: NOVA LISTA ===== -->
+  <div id="telaNova" style="display:none;">
+    <div class="card">
+      <h2>➕ Montar nova lista</h2>
+      <div class="busca">
+        <input type="text" id="buscaProduto" placeholder="🔍 Buscar produto..." oninput="renderizarCatalogo()">
+      </div>
+      <div class="catalogo-lista" id="catalogoLista"></div>
+      <div class="acoes">
+        <button class="btn-verde" onclick="criarListaComSelecionados()">✅ Criar lista com selecionados</button>
+      </div>
+      <div style="font-size:.75em; color:#94a3b8; margin-top:8px; text-align:center;">
+        Produto não está na lista? Vá em <b>📦 Produtos</b> e cadastre.
+      </div>
+    </div>
   </div>
 
-  <!-- Total -->
-  <div class="total">
-    <span>💰 Total da lista</span>
-    <b id="total">R$ 0,00</b>
-  </div>
+  <!-- ===== ABA: PRODUTOS (catálogo) ===== -->
+  <div id="telaProdutos" style="display:none;">
+    <div class="card">
+      <h2>📦 Cadastrar produto</h2>
+      <div class="form-linha">
+        <input type="text" id="novoProdutoNome" placeholder="Nome do produto" autocomplete="off">
+        <input type="number" id="novoProdutoPreco" placeholder="Últ. preço" step="0.01" min="0">
+        <button class="btn-verde" onclick="cadastrarProduto()">Adicionar</button>
+      </div>
+      <div style="font-size:.75em; color:#94a3b8; margin-top:6px;">
+        💡 O preço é opcional — pode cadastrar só o nome agora e definir o preço no mercado.
+      </div>
+    </div>
 
-  <!-- Histórico de últimos preços -->
-  <div class="card">
-    <h2>📊 Últimos preços pagos</h2>
-    <div id="historico" class="historico"></div>
+    <div class="card" style="margin-top:12px;">
+      <h2>
+        <span>📦 Produtos cadastrados</span>
+        <span class="badge" id="badgeProdutos">0</span>
+      </h2>
+      <div class="busca">
+        <input type="text" id="buscaProdutosCad" placeholder="🔍 Buscar..." oninput="renderizarProdutosCadastrados()">
+      </div>
+      <div class="historico" id="produtosCadastrados" style="max-height:400px;"></div>
+    </div>
   </div>
 
 </div>
@@ -255,7 +350,7 @@
 import { initializeApp } from "firebase/app";
 import {
   getFirestore, collection, addDoc, deleteDoc, doc,
-  updateDoc, onSnapshot, query, orderBy
+  updateDoc, onSnapshot, query, orderBy, where, getDocs, setDoc
 } from "firebase/firestore";
 
 // ===== CONFIG (mantenha a sua) =====
@@ -269,67 +364,42 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const COL = 'compras';
+
+const COL_ITENS = 'compras';        // itens da lista atual
+const COL_PRODUTOS = 'produtos';    // catálogo de produtos
 
 // ===== ESTADO =====
-let itens = [];
-let historico = [];
-let editorAberto = null; // id do item com editor aberto
+let itens = [];            // lista atual
+let produtos = [];         // catálogo
+let selecionados = new Map(); // idProduto -> {nome, qtd}
+let editorAberto = null;
+let abaAtual = 'lista';
 
 const statusEl = document.getElementById('status');
 function setStatus(msg, tipo = '') {
   statusEl.textContent = msg;
   statusEl.className = tipo;
 }
-
 const fmt = (n) => 'R$ ' + Number(n).toFixed(2).replace('.', ',');
 
-// ===== ADICIONAR (em casa, sem preço) =====
-async function adicionar() {
-  const nome = document.getElementById('nome').value.trim();
-  const qtd = parseInt(document.getElementById('qtd').value) || 1;
+// ===== ABAS =====
+window.mudarAba = function(aba) {
+  abaAtual = aba;
+  document.getElementById('telaLista').style.display    = aba === 'lista'    ? 'block' : 'none';
+  document.getElementById('telaNova').style.display     = aba === 'nova'     ? 'block' : 'none';
+  document.getElementById('telaProdutos').style.display = aba === 'produtos' ? 'block' : 'none';
+  document.getElementById('abaLista').classList.toggle('ativa', aba === 'lista');
+  document.getElementById('abaNova').classList.toggle('ativa', aba === 'nova');
+  document.getElementById('abaProdutos').classList.toggle('ativa', aba === 'produtos');
 
-  if (!nome) { alert('Digite o nome do item.'); return; }
+  if (aba === 'nova') renderizarCatalogo();
+  if (aba === 'produtos') renderizarProdutosCadastrados();
+};
 
-  try {
-    await addDoc(collection(db, COL), {
-      nome,
-      qtd,
-      preco: null,          // ← ainda não tem preço
-      comprado: false,
-      data: new Date().toISOString()
-    });
-
-    document.getElementById('nome').value = '';
-    document.getElementById('qtd').value = '1';
-    document.getElementById('sugestao').innerHTML = '';
-    document.getElementById('nome').focus();
-  } catch (e) {
-    setStatus('❌ ' + e.message, 'erro');
-  }
-}
-
-// ===== DEFINIR PREÇO (no mercado) =====
-async function definirPreco(id, preco) {
-  if (!preco || preco <= 0) { alert('Digite um preço válido.'); return; }
-  try {
-    await updateDoc(doc(db, COL, id), {
-      preco: Number(preco),
-      data: new Date().toISOString()
-    });
-    editorAberto = null;
-  } catch (e) {
-    setStatus('❌ ' + e.message, 'erro');
-  }
-}
-
-// ===== HISTÓRICO: último preço pago por nome =====
+// ===== HISTÓRICO: último preço por produto =====
 function calcularHistorico(lista) {
   const mapa = {};
-  // percorre em ordem cronológica, guardando o mais recente
-  const ordenados = [...lista].sort((a, b) =>
-    (a.data || '').localeCompare(b.data || '')
-  );
+  const ordenados = [...lista].sort((a, b) => (a.data || '').localeCompare(b.data || ''));
   ordenados.forEach(item => {
     if (!item.preco || item.preco <= 0) return;
     const chave = item.nome.toLowerCase().trim();
@@ -338,27 +408,122 @@ function calcularHistorico(lista) {
   return Object.values(mapa);
 }
 
-// ===== RENDER =====
+// ===== CATÁLOGO: mescla produtos cadastrados + itens já comprados =====
+function catalogoCompleto() {
+  const mapa = new Map();
+  // primeiro os produtos cadastrados
+  produtos.forEach(p => {
+    const k = p.nome.toLowerCase().trim();
+    mapa.set(k, { id: p.id, nome: p.nome, ultimoPreco: p.ultimoPreco || null });
+  });
+  // depois itens de compras (atualiza último preço e cria se não existir)
+  const hist = calcularHistorico(itens);
+  hist.forEach(h => {
+    const k = h.nome.toLowerCase().trim();
+    if (mapa.has(k)) {
+      mapa.get(k).ultimoPreco = h.preco;
+    } else {
+      mapa.set(k, { id: 'temp-' + k, nome: h.nome, ultimoPreco: h.preco });
+    }
+  });
+  return [...mapa.values()].sort((a, b) => a.nome.localeCompare(b.nome));
+}
+
+// ===== RENDER: CATÁLOGO (tela nova lista) =====
+function renderizarCatalogo() {
+  const el = document.getElementById('catalogoLista');
+  const busca = (document.getElementById('buscaProduto').value || '').toLowerCase().trim();
+  const lista = catalogoCompleto().filter(p => p.nome.toLowerCase().includes(busca));
+
+  if (lista.length === 0) {
+    el.innerHTML = '<div class="vazio">Nenhum produto. Cadastre na aba 📦 Produtos.</div>';
+    return;
+  }
+
+  el.innerHTML = lista.map(p => {
+    const sel = selecionados.has(p.id);
+    const ult = p.ultimoPreco ? `<span class="ultimo">• último: ${fmt(p.ultimoPreco)}</span>` : '<span style="opacity:.5">• sem preço</span>';
+    const qtd = sel ? selecionados.get(p.id).qtd : 1;
+    return `
+      <div class="produto-sel ${sel ? 'selecionado' : ''}" onclick="window.__toggleSelecionado('${p.id}')">
+        <input type="checkbox" ${sel ? 'checked' : ''} onclick="event.stopPropagation(); window.__toggleSelecionado('${p.id}')">
+        <div class="info">
+          <div class="nome">${p.nome}</div>
+          <div class="det">${ult}</div>
+        </div>
+        ${sel
+          ? `<input type="number" class="qtd-input" min="1" value="${qtd}"
+                    onclick="event.stopPropagation()"
+                    onchange="window.__mudarQtd('${p.id}', this.value)">`
+          : '<span style="width:60px"></span>'}
+      </div>
+    `;
+  }).join('');
+}
+
+window.__toggleSelecionado = function(id) {
+  if (selecionados.has(id)) {
+    selecionados.delete(id);
+  } else {
+    const p = catalogoCompleto().find(x => x.id === id);
+    if (p) selecionados.set(id, { nome: p.nome, qtd: 1, ultimoPreco: p.ultimoPreco });
+  }
+  renderizarCatalogo();
+};
+window.__mudarQtd = function(id, v) {
+  const q = parseInt(v) || 1;
+  if (selecionados.has(id)) selecionados.get(id).qtd = q;
+  renderizarCatalogo();
+};
+
+// ===== CRIAR LISTA COM SELECIONADOS =====
+window.criarListaComSelecionados = async function() {
+  if (selecionados.size === 0) {
+    alert('Selecione pelo menos um produto.');
+    return;
+  }
+  const ativos = itens.filter(i => !i.comprado);
+  if (ativos.length > 0) {
+    if (!confirm(`Já existem ${ativos.length} item(ns) na lista atual. Deseja apagá-los e criar a nova lista?`)) return;
+    await Promise.all(ativos.map(i => deleteDoc(doc(db, COL_ITENS, i.id))));
+  }
+
+  const data = new Date().toISOString();
+  await Promise.all([...selecionados.values()].map(s =>
+    addDoc(collection(db, COL_ITENS), {
+      nome: s.nome,
+      qtd: s.qtd,
+      preco: null,
+      comprado: false,
+      data
+    })
+  ));
+
+  selecionados.clear();
+  mudarAba('lista');
+  setStatus('✅ Lista criada!', 'ok');
+};
+
+// ===== RENDER: LISTA ATUAL =====
 function renderizar() {
   const el = document.getElementById('lista');
   const ativos = itens.filter(i => !i.comprado);
   const comprados = itens.filter(i => i.comprado);
 
   if (itens.length === 0) {
-    el.innerHTML = '<div class="vazio">Nenhum item na lista</div>';
+    el.innerHTML = '<div class="vazio">Nenhum item. Vá em ➕ Nova lista.</div>';
     document.getElementById('total').textContent = fmt(0);
-    atualizarHistorico();
     return;
   }
 
   const renderItem = (item) => {
-    const h = historico.find(x => x.nome.toLowerCase() === item.nome.toLowerCase().trim());
+    const h = calcularHistorico(itens).find(x => x.nome.toLowerCase() === item.nome.toLowerCase().trim());
     const ultimoPreco = h ? h.preco : null;
     const temPreco = item.preco && item.preco > 0;
-    const mudou = temPreco && ultimoPreco && Math.abs(ultimoPreco - item.preco) > 0.001;
+    const mudou = temPreco && ultimoPreco && Math.abs(ultimoPreco - item.preco) > 0.001 &&
+                  item.data !== h.data; // ignora se é o mesmo registro
     const editorAbertoAqui = editorAberto === item.id;
 
-    // linha de detalhe
     let detalhe = `${item.qtd}x`;
     if (!temPreco) {
       detalhe += ultimoPreco
@@ -366,12 +531,9 @@ function renderizar() {
         : ` <span class="sem-preco">• sem preço</span>`;
     } else {
       detalhe += ` ${fmt(item.preco)} cada = ${fmt(item.preco * item.qtd)}`;
-      if (mudou) {
-        detalhe += ` <span class="mudou">(antes ${fmt(ultimoPreco)})</span>`;
-      }
+      if (mudou) detalhe += ` <span class="mudou">(antes ${fmt(ultimoPreco)})</span>`;
     }
 
-    // preço à direita: se tiver preço, mostra total; se não, botão "definir"
     const precoHtml = temPreco
       ? `<div class="preco-atual">${fmt(item.preco * item.qtd)}</div>`
       : `<div class="preco-atual vazio">+ preço</div>`;
@@ -406,121 +568,142 @@ function renderizar() {
     (comprados.length ? `<div style="font-size:.7em; color:#64748b; margin:10px 0 4px;">— comprados —</div>` +
       comprados.map(renderItem).join('') : '');
 
-  // total: soma dos ativos com preço
   const total = ativos.reduce((s, i) => s + (i.preco || 0) * i.qtd, 0);
   document.getElementById('total').textContent = fmt(total);
 
-  atualizarHistorico();
-
-  // foca no input do editor aberto
   if (editorAberto) {
     const inp = document.getElementById('preco-' + editorAberto);
     if (inp) inp.focus();
   }
 }
 
-function atualizarHistorico() {
-  const histEl = document.getElementById('historico');
-  if (historico.length === 0) {
-    histEl.innerHTML = '<div class="vazio">Sem histórico ainda</div>';
+// ===== RENDER: PRODUTOS CADASTRADOS =====
+function renderizarProdutosCadastrados() {
+  const el = document.getElementById('produtosCadastrados');
+  const busca = (document.getElementById('buscaProdutosCad').value || '').toLowerCase().trim();
+  const lista = catalogoCompleto().filter(p => p.nome.toLowerCase().includes(busca));
+  document.getElementById('badgeProdutos').textContent = lista.length;
+
+  if (lista.length === 0) {
+    el.innerHTML = '<div class="vazio">Nenhum produto.</div>';
     return;
   }
-  histEl.innerHTML = historico
-    .sort((a, b) => (b.data || '').localeCompare(a.data || ''))
-    .slice(0, 20)
-    .map(h => `
-      <div class="historico-linha">
-        <span class="nome">${h.nome}</span>
-        <b class="preco">${fmt(h.preco)}</b>
-      </div>
-    `).join('');
+  el.innerHTML = lista.map(p => `
+    <div class="historico-linha">
+      <span class="nome">${p.nome}</span>
+      <span>
+        ${p.ultimoPreco ? `<b class="preco">${fmt(p.ultimoPreco)}</b>` : '<span style="opacity:.5; font-size:.85em;">sem preço</span>'}
+        ${p.id && !p.id.startsWith('temp-') ? `<button class="btn-del" style="background:transparent;color:#ef4444;margin-left:6px;" onclick="event.stopPropagation(); window.__excluirProduto('${p.id}', '${p.nome.replace(/'/g,"\\'")}')">✕</button>` : ''}
+      </span>
+    </div>
+  `).join('');
+}
+
+// ===== CADASTRAR PRODUTO =====
+window.cadastrarProduto = async function() {
+  const nome = document.getElementById('novoProdutoNome').value.trim();
+  const preco = parseFloat(document.getElementById('novoProdutoPreco').value) || null;
+  if (!nome) { alert('Digite o nome.'); return; }
+
+  // Verifica duplicata
+  const existe = produtos.find(p => p.nome.toLowerCase().trim() === nome.toLowerCase().trim());
+  if (existe) { alert('Já existe um produto com esse nome.'); return; }
+
+  await addDoc(collection(db, COL_PRODUTOS), {
+    nome,
+    ultimoPreco: preco,
+    criadoEm: new Date().toISOString()
+  });
+  document.getElementById('novoProdutoNome').value = '';
+  document.getElementById('novoProdutoPreco').value = '';
+  document.getElementById('novoProdutoNome').focus();
+};
+
+window.__excluirProduto = async function(id, nome) {
+  if (!confirm(`Excluir produto "${nome}"?`)) return;
+  await deleteDoc(doc(db, COL_PRODUTOS, id));
+};
+
+// ===== DEFINIR PREÇO (no mercado) =====
+async function definirPreco(id, preco) {
+  if (!preco || preco <= 0) { alert('Digite um preço válido.'); return; }
+  const item = itens.find(i => i.id === id);
+  await updateDoc(doc(db, COL_ITENS, id), {
+    preco: Number(preco),
+    data: new Date().toISOString()
+  });
+  // Atualiza catálogo de produtos (último preço) — se produto existir
+  if (item) {
+    const k = item.nome.toLowerCase().trim();
+    const prod = produtos.find(p => p.nome.toLowerCase().trim() === k);
+    if (prod) {
+      await updateDoc(doc(db, COL_PRODUTOS, prod.id), { ultimoPreco: Number(preco) });
+    } else {
+      // cria produto automaticamente
+      await addDoc(collection(db, COL_PRODUTOS), {
+        nome: item.nome,
+        ultimoPreco: Number(preco),
+        criadoEm: new Date().toISOString()
+      });
+    }
+  }
+  editorAberto = null;
 }
 
 // ===== AÇÕES =====
 async function toggle(id, novoComprado) {
-  try {
-    await updateDoc(doc(db, COL, id), { comprado: novoComprado });
-  } catch (e) {
-    setStatus('❌ ' + e.message, 'erro');
-  }
+  await updateDoc(doc(db, COL_ITENS, id), { comprado: novoComprado });
 }
-
 async function excluir(id) {
   if (!confirm('Excluir este item?')) return;
-  try {
-    await deleteDoc(doc(db, COL, id));
-  } catch (e) {
-    setStatus('❌ ' + e.message, 'erro');
-  }
+  await deleteDoc(doc(db, COL_ITENS, id));
 }
-
 async function limparComprados() {
   const comprados = itens.filter(i => i.comprado);
   if (!comprados.length) return;
   if (!confirm(`Excluir ${comprados.length} item(ns) comprado(s)?`)) return;
-  try {
-    await Promise.all(comprados.map(i => deleteDoc(doc(db, COL, i.id))));
-  } catch (e) {
-    setStatus('❌ ' + e.message, 'erro');
-  }
+  await Promise.all(comprados.map(i => deleteDoc(doc(db, COL_ITENS, i.id))));
 }
-
-function abrirEditor(id) {
-  editorAberto = (editorAberto === id) ? null : id;
-  renderizar();
-}
-function fecharEditor() {
-  editorAberto = null;
-  renderizar();
-}
+function abrirEditor(id) { editorAberto = (editorAberto === id) ? null : id; renderizar(); }
+function fecharEditor() { editorAberto = null; renderizar(); }
 async function salvarPreco(id) {
   const inp = document.getElementById('preco-' + id);
   const v = parseFloat(inp.value);
-  if (!v || v <= 0) {
-    alert('Digite um preço válido.');
-    inp.focus();
-    return;
-  }
+  if (!v || v <= 0) { alert('Digite um preço válido.'); inp.focus(); return; }
   await definirPreco(id, v);
 }
-
-// ===== SUGESTÃO AO DIGITAR =====
-document.getElementById('nome').addEventListener('input', (e) => {
-  const v = e.target.value.toLowerCase().trim();
-  const sug = document.getElementById('sugestao');
-  if (!v) { sug.innerHTML = ''; return; }
-  const encontrados = historico.filter(h => h.nome.toLowerCase().includes(v));
-  if (encontrados.length === 0) { sug.innerHTML = ''; return; }
-  const melhor = encontrados[0];
-  sug.innerHTML = `💡 Último preço de <b>${melhor.nome}</b>: ${fmt(melhor.preco)}`;
-});
 
 // ===== FIRESTORE =====
 function escutar() {
   setStatus('🔄 Conectando...');
-  const q = query(collection(db, COL), orderBy('data', 'desc'));
-  onSnapshot(q, snap => {
+  let primeiro = true;
+
+  onSnapshot(collection(db, COL_ITENS), snap => {
     itens = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    historico = calcularHistorico(itens);
-    renderizar();
-    setStatus('✅ Sincronizado', 'ok');
-  }, err => {
-    console.error(err);
-    setStatus('❌ ' + err.message, 'erro');
-  });
+    if (abaAtual === 'lista') renderizar();
+    if (abaAtual === 'nova') renderizarCatalogo();
+    if (abaAtual === 'produtos') renderizarProdutosCadastrados();
+    if (primeiro) { setStatus('✅ Conectado', 'ok'); primeiro = false; }
+  }, err => setStatus('❌ ' + err.message, 'erro'));
+
+  onSnapshot(collection(db, COL_PRODUTOS), snap => {
+    produtos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (abaAtual === 'nova') renderizarCatalogo();
+    if (abaAtual === 'produtos') renderizarProdutosCadastrados();
+  }, err => console.error(err));
 }
 
 // ===== EXPOR =====
-window.adicionar = adicionar;
-window.limparComprados = limparComprados;
 window.__toggle = toggle;
 window.__excluir = excluir;
 window.__abrirEditor = abrirEditor;
 window.__fecharEditor = fecharEditor;
 window.__salvarPreco = salvarPreco;
+window.limparComprados = limparComprados;
 
 // ===== START =====
 escutar();
+mudarAba('lista');
 </script>
 </body>
 </html>
