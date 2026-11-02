@@ -37,15 +37,15 @@
     align-items: center;
   }
 
-  /* Formulário */
+  /* Formulário de adicionar (em casa, sem preço) */
   .form-linha {
     display: grid;
-    grid-template-columns: 1fr 90px 70px auto;
+    grid-template-columns: 1fr 80px auto;
     gap: 6px;
     margin-bottom: 8px;
   }
   @media (max-width: 500px) {
-    .form-linha { grid-template-columns: 1fr 1fr; }
+    .form-linha { grid-template-columns: 1fr 70px; }
     .form-linha button { grid-column: span 2; }
   }
   input {
@@ -72,10 +72,8 @@
   .btn-verde { background: #16a34a; }
   .btn-verde:hover { background: #15803d; }
   .btn-azul { background: #2563eb; }
-  .btn-vermelho { background: #dc2626; }
   .btn-cinza { background: #475569; }
 
-  /* Sugestão */
   #sugestao {
     font-size: .75em;
     color: #38bdf8;
@@ -85,27 +83,45 @@
   }
   #sugestao b { color: #fbbf24; }
 
-  /* Lista */
+  /* Item da lista */
   .item {
+    background: #0f172a;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    border-left: 3px solid #475569;
+    overflow: hidden;
+    transition: .15s;
+  }
+  .item.comprado {
+    opacity: .55;
+    border-left-color: #16a34a;
+  }
+  .item.comprado .nome { text-decoration: line-through; }
+
+  .item-linha {
     display: grid;
     grid-template-columns: 24px 1fr auto auto;
     gap: 10px;
     align-items: center;
     padding: 10px;
-    background: #0f172a;
-    border-radius: 8px;
-    margin-bottom: 6px;
-    border-left: 3px solid #475569;
-    transition: .15s;
+    cursor: pointer;
   }
-  .item.comprado {
-    opacity: .5;
-    border-left-color: #16a34a;
-  }
-  .item.comprado .nome { text-decoration: line-through; }
+  .item-linha:hover { background: #1e293b; }
+
   .item .nome { font-weight: 600; font-size: .9em; }
   .item .detalhe { font-size: .75em; color: #94a3b8; margin-top: 2px; }
-  .item .preco-atual { color: #fbbf24; font-weight: bold; font-size: .9em; white-space: nowrap; }
+  .item .detalhe .ultimo { color: #38bdf8; }
+  .item .detalhe .mudou { color: #f87171; }
+  .item .detalhe .sem-preco { color: #64748b; font-style: italic; }
+
+  .item .preco-atual {
+    color: #fbbf24;
+    font-weight: bold;
+    font-size: .9em;
+    white-space: nowrap;
+  }
+  .item .preco-atual.vazio { color: #475569; }
+
   .item input[type="checkbox"] {
     width: 18px; height: 18px; cursor: pointer; accent-color: #16a34a;
   }
@@ -116,6 +132,20 @@
     font-size: 1em;
   }
   .item .btn-del:hover { background: #7f1d1d; }
+
+  /* Área de edição do preço (expande ao clicar) */
+  .item-editor {
+    display: none;
+    padding: 10px;
+    background: #1e293b;
+    border-top: 1px solid #334155;
+    gap: 8px;
+    align-items: center;
+  }
+  .item-editor.aberto { display: flex; }
+  .item-editor label { font-size: .8em; color: #94a3b8; white-space: nowrap; }
+  .item-editor input { flex: 1; padding: 8px; }
+  .item-editor .btn-salvar-preco { background: #16a34a; padding: 8px 14px; }
 
   /* Total */
   .total {
@@ -130,7 +160,6 @@
   }
   .total b { color: #fbbf24; font-size: 1.2em; }
 
-  /* Status */
   #status {
     font-size: .75em;
     text-align: center;
@@ -141,19 +170,20 @@
   #status.ok { background: #14532d; }
   #status.erro { background: #7f1d1d; }
 
-  /* Histórico */
   .historico {
-    max-height: 150px;
+    max-height: 200px;
     overflow-y: auto;
     font-size: .8em;
   }
   .historico-linha {
     display: flex;
     justify-content: space-between;
-    padding: 5px 8px;
+    padding: 6px 8px;
     border-bottom: 1px dashed #334155;
   }
   .historico-linha:last-child { border-bottom: none; }
+  .historico-linha .nome { color: #e2e8f0; }
+  .historico-linha .preco { color: #fbbf24; font-weight: bold; }
 
   .vazio {
     text-align: center;
@@ -178,12 +208,11 @@
 
   <div id="status">🔄 Conectando...</div>
 
-  <!-- Adicionar item -->
+  <!-- Adicionar item (em casa, só nome + qtd) -->
   <div class="card">
     <h2>➕ Adicionar item</h2>
     <div class="form-linha">
       <input type="text" id="nome" placeholder="Nome do item" autocomplete="off">
-      <input type="number" id="preco" placeholder="Preço" step="0.01" min="0">
       <input type="number" id="qtd" placeholder="Qtd" value="1" min="1" step="1">
       <button class="btn-verde" onclick="adicionar()">Adicionar</button>
     </div>
@@ -205,7 +234,7 @@
     <b id="total">R$ 0,00</b>
   </div>
 
-  <!-- Histórico -->
+  <!-- Histórico de últimos preços -->
   <div class="card">
     <h2>📊 Últimos preços pagos</h2>
     <div id="historico" class="historico"></div>
@@ -225,7 +254,7 @@
 <script type="module">
 import { initializeApp } from "firebase/app";
 import {
-  getFirestore, collection, addDoc, getDocs, deleteDoc, doc,
+  getFirestore, collection, addDoc, deleteDoc, doc,
   updateDoc, onSnapshot, query, orderBy
 } from "firebase/firestore";
 
@@ -240,11 +269,12 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const COL = 'compras'; // coleção nova
+const COL = 'compras';
 
 // ===== ESTADO =====
-let itens = [];         // itens da lista atual
-let historico = [];     // histórico de preços (nome -> {preco, data})
+let itens = [];
+let historico = [];
+let editorAberto = null; // id do item com editor aberto
 
 const statusEl = document.getElementById('status');
 function setStatus(msg, tipo = '') {
@@ -252,30 +282,25 @@ function setStatus(msg, tipo = '') {
   statusEl.className = tipo;
 }
 
-// ===== FORMATAÇÃO =====
 const fmt = (n) => 'R$ ' + Number(n).toFixed(2).replace('.', ',');
 
-// ===== ADICIONAR =====
+// ===== ADICIONAR (em casa, sem preço) =====
 async function adicionar() {
   const nome = document.getElementById('nome').value.trim();
-  const preco = parseFloat(document.getElementById('preco').value) || 0;
   const qtd = parseInt(document.getElementById('qtd').value) || 1;
 
   if (!nome) { alert('Digite o nome do item.'); return; }
-  if (preco <= 0) { alert('Digite um preço válido.'); return; }
 
   try {
     await addDoc(collection(db, COL), {
       nome,
-      preco,
       qtd,
+      preco: null,          // ← ainda não tem preço
       comprado: false,
       data: new Date().toISOString()
     });
 
-    // limpa campos
     document.getElementById('nome').value = '';
-    document.getElementById('preco').value = '';
     document.getElementById('qtd').value = '1';
     document.getElementById('sugestao').innerHTML = '';
     document.getElementById('nome').focus();
@@ -284,23 +309,36 @@ async function adicionar() {
   }
 }
 
-// ===== CARREGAR HISTÓRICO =====
+// ===== DEFINIR PREÇO (no mercado) =====
+async function definirPreco(id, preco) {
+  if (!preco || preco <= 0) { alert('Digite um preço válido.'); return; }
+  try {
+    await updateDoc(doc(db, COL, id), {
+      preco: Number(preco),
+      data: new Date().toISOString()
+    });
+    editorAberto = null;
+  } catch (e) {
+    setStatus('❌ ' + e.message, 'erro');
+  }
+}
+
+// ===== HISTÓRICO: último preço pago por nome =====
 function calcularHistorico(lista) {
   const mapa = {};
-  // ordena por data (mais antigo primeiro)
+  // percorre em ordem cronológica, guardando o mais recente
   const ordenados = [...lista].sort((a, b) =>
     (a.data || '').localeCompare(b.data || '')
   );
   ordenados.forEach(item => {
+    if (!item.preco || item.preco <= 0) return;
     const chave = item.nome.toLowerCase().trim();
-    if (!mapa[chave] || (item.data || '') > (mapa[chave].data || '')) {
-      mapa[chave] = { nome: item.nome, preco: item.preco, data: item.data };
-    }
+    mapa[chave] = { nome: item.nome, preco: item.preco, data: item.data };
   });
   return Object.values(mapa);
 }
 
-// ===== RENDERIZAR LISTA =====
+// ===== RENDER =====
 function renderizar() {
   const el = document.getElementById('lista');
   const ativos = itens.filter(i => !i.comprado);
@@ -309,28 +347,57 @@ function renderizar() {
   if (itens.length === 0) {
     el.innerHTML = '<div class="vazio">Nenhum item na lista</div>';
     document.getElementById('total').textContent = fmt(0);
+    atualizarHistorico();
     return;
   }
 
   const renderItem = (item) => {
-    // busca último preço no histórico
-    const h = historico.find(x => x.nome.toLowerCase() === item.nome.toLowerCase());
+    const h = historico.find(x => x.nome.toLowerCase() === item.nome.toLowerCase().trim());
     const ultimoPreco = h ? h.preco : null;
-    const mudou = ultimoPreco && ultimoPreco !== item.preco;
+    const temPreco = item.preco && item.preco > 0;
+    const mudou = temPreco && ultimoPreco && Math.abs(ultimoPreco - item.preco) > 0.001;
+    const editorAbertoAqui = editorAberto === item.id;
+
+    // linha de detalhe
+    let detalhe = `${item.qtd}x`;
+    if (!temPreco) {
+      detalhe += ultimoPreco
+        ? ` <span class="ultimo">• último: ${fmt(ultimoPreco)}</span>`
+        : ` <span class="sem-preco">• sem preço</span>`;
+    } else {
+      detalhe += ` ${fmt(item.preco)} cada = ${fmt(item.preco * item.qtd)}`;
+      if (mudou) {
+        detalhe += ` <span class="mudou">(antes ${fmt(ultimoPreco)})</span>`;
+      }
+    }
+
+    // preço à direita: se tiver preço, mostra total; se não, botão "definir"
+    const precoHtml = temPreco
+      ? `<div class="preco-atual">${fmt(item.preco * item.qtd)}</div>`
+      : `<div class="preco-atual vazio">+ preço</div>`;
 
     return `
       <div class="item ${item.comprado ? 'comprado' : ''}">
-        <input type="checkbox" ${item.comprado ? 'checked' : ''}
-               onchange="window.__toggle('${item.id}', ${!item.comprado})">
-        <div>
-          <div class="nome">${item.nome}</div>
-          <div class="detalhe">
-            ${item.qtd}x ${fmt(item.preco)}
-            ${mudou ? `<span style="color:#f87171;"> (antes ${fmt(ultimoPreco)})</span>` : ''}
+        <div class="item-linha" onclick="window.__abrirEditor('${item.id}')">
+          <input type="checkbox" ${item.comprado ? 'checked' : ''}
+                 onclick="event.stopPropagation()"
+                 onchange="window.__toggle('${item.id}', ${!item.comprado})">
+          <div>
+            <div class="nome">${item.nome}</div>
+            <div class="detalhe">${detalhe}</div>
           </div>
+          ${precoHtml}
+          <button class="btn-del" onclick="event.stopPropagation(); window.__excluir('${item.id}')">✕</button>
         </div>
-        <div class="preco-atual">${fmt(item.preco * item.qtd)}</div>
-        <button class="btn-del" onclick="window.__excluir('${item.id}')">✕</button>
+        <div class="item-editor ${editorAbertoAqui ? 'aberto' : ''}">
+          <label>Preço un.:</label>
+          <input type="number" step="0.01" min="0" placeholder="0,00"
+                 value="${temPreco ? item.preco : ''}"
+                 id="preco-${item.id}"
+                 onkeydown="if(event.key==='Enter') window.__salvarPreco('${item.id}')">
+          <button class="btn-salvar-preco" onclick="window.__salvarPreco('${item.id}')">✓</button>
+          <button class="btn-cinza" onclick="event.stopPropagation(); window.__fecharEditor()">✕</button>
+        </div>
       </div>
     `;
   };
@@ -339,25 +406,34 @@ function renderizar() {
     (comprados.length ? `<div style="font-size:.7em; color:#64748b; margin:10px 0 4px;">— comprados —</div>` +
       comprados.map(renderItem).join('') : '');
 
-  // total
-  const total = ativos.reduce((s, i) => s + i.preco * i.qtd, 0);
+  // total: soma dos ativos com preço
+  const total = ativos.reduce((s, i) => s + (i.preco || 0) * i.qtd, 0);
   document.getElementById('total').textContent = fmt(total);
 
-  // histórico
+  atualizarHistorico();
+
+  // foca no input do editor aberto
+  if (editorAberto) {
+    const inp = document.getElementById('preco-' + editorAberto);
+    if (inp) inp.focus();
+  }
+}
+
+function atualizarHistorico() {
   const histEl = document.getElementById('historico');
   if (historico.length === 0) {
     histEl.innerHTML = '<div class="vazio">Sem histórico ainda</div>';
-  } else {
-    histEl.innerHTML = historico
-      .sort((a, b) => (b.data || '').localeCompare(a.data || ''))
-      .slice(0, 20)
-      .map(h => `
-        <div class="historico-linha">
-          <span>${h.nome}</span>
-          <b style="color:#fbbf24;">${fmt(h.preco)}</b>
-        </div>
-      `).join('');
+    return;
   }
+  histEl.innerHTML = historico
+    .sort((a, b) => (b.data || '').localeCompare(a.data || ''))
+    .slice(0, 20)
+    .map(h => `
+      <div class="historico-linha">
+        <span class="nome">${h.nome}</span>
+        <b class="preco">${fmt(h.preco)}</b>
+      </div>
+    `).join('');
 }
 
 // ===== AÇÕES =====
@@ -389,30 +465,40 @@ async function limparComprados() {
   }
 }
 
+function abrirEditor(id) {
+  editorAberto = (editorAberto === id) ? null : id;
+  renderizar();
+}
+function fecharEditor() {
+  editorAberto = null;
+  renderizar();
+}
+async function salvarPreco(id) {
+  const inp = document.getElementById('preco-' + id);
+  const v = parseFloat(inp.value);
+  if (!v || v <= 0) {
+    alert('Digite um preço válido.');
+    inp.focus();
+    return;
+  }
+  await definirPreco(id, v);
+}
+
 // ===== SUGESTÃO AO DIGITAR =====
 document.getElementById('nome').addEventListener('input', (e) => {
   const v = e.target.value.toLowerCase().trim();
   const sug = document.getElementById('sugestao');
   if (!v) { sug.innerHTML = ''; return; }
-
   const encontrados = historico.filter(h => h.nome.toLowerCase().includes(v));
-  if (encontrados.length === 0) {
-    sug.innerHTML = '';
-    return;
-  }
+  if (encontrados.length === 0) { sug.innerHTML = ''; return; }
   const melhor = encontrados[0];
   sug.innerHTML = `💡 Último preço de <b>${melhor.nome}</b>: ${fmt(melhor.preco)}`;
-  // preenche o preço automaticamente
-  if (document.getElementById('preco').value === '') {
-    document.getElementById('preco').value = melhor.preco;
-  }
 });
 
-// ===== FIRESTORE: escuta em tempo real =====
+// ===== FIRESTORE =====
 function escutar() {
   setStatus('🔄 Conectando...');
   const q = query(collection(db, COL), orderBy('data', 'desc'));
-
   onSnapshot(q, snap => {
     itens = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     historico = calcularHistorico(itens);
@@ -426,9 +512,12 @@ function escutar() {
 
 // ===== EXPOR =====
 window.adicionar = adicionar;
+window.limparComprados = limparComprados;
 window.__toggle = toggle;
 window.__excluir = excluir;
-window.limparComprados = limparComprados;
+window.__abrirEditor = abrirEditor;
+window.__fecharEditor = fecharEditor;
+window.__salvarPreco = salvarPreco;
 
 // ===== START =====
 escutar();
