@@ -3,326 +3,219 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>💸 Controle PIX x NF</title>
+<title>Controle PIX x NF</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: system-ui, -apple-system, sans-serif;
-    background: #0f172a;
-    color: #e2e8f0;
-    padding: 15px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #f4f6f8;
+    color: #222;
     min-height: 100vh;
   }
-  h1 { font-size: 1.3em; text-align: center; margin-bottom: 15px; }
-
-  .app { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
-
-  .card {
+  header {
     background: #1e293b;
-    border-radius: 12px;
-    padding: 15px;
+    color: #fff;
+    padding: 12px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
   }
-  .card h2 {
-    font-size: .9em;
-    color: #fbbf24;
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  #status {
-    font-size: .75em;
-    text-align: center;
-    padding: 6px;
-    border-radius: 6px;
-    background: #78350f;
-  }
-  #status.ok { background: #14532d; }
-  #status.erro { background: #7f1d1d; }
-
-  /* ===== BARRA DE EMPRESAS ===== */
-  .empresas-bar {
-    display: flex;
-    gap: 6px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    align-items: center;
-    flex-wrap: nowrap;
+  header h1 { font-size: 16px; font-weight: 600; margin-bottom: 10px; opacity: .9; }
+  .empresas {
+    display: flex; gap: 8px; overflow-x: auto;
+    padding-bottom: 4px; align-items: center;
   }
   .empresa-btn {
-    background: #0f172a;
-    color: #94a3b8;
-    border: 1px solid #334155;
-    padding: 8px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: .85em;
-    white-space: nowrap;
-    transition: .15s;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    background: #334155; color: #cbd5e1;
+    border: 1px solid #475569;
+    padding: 8px 12px; border-radius: 8px;
+    cursor: pointer; font-size: 14px; white-space: nowrap;
+    transition: all .15s; font-weight: 500;
+    display: flex; align-items: center; gap: 6px;
   }
-  .empresa-btn:hover { background: #334155; color: #fff; }
+  .empresa-btn:hover { background: #475569; color: #fff; }
   .empresa-btn.ativa {
-    background: #16a34a;
-    border-color: #16a34a;
-    color: #fff;
+    background: #3b82f6; border-color: #3b82f6; color: #fff;
+    box-shadow: 0 0 0 2px rgba(59,130,246,.4);
   }
   .empresa-btn .lapis, .empresa-btn .lixo {
-    font-size: .8em;
-    opacity: .6;
-    padding: 2px 4px;
-    border-radius: 4px;
-    transition: .15s;
+    font-size: 11px; opacity: .6; padding: 2px 4px;
+    border-radius: 4px; transition: all .15s;
   }
   .empresa-btn .lapis:hover, .empresa-btn .lixo:hover {
-    opacity: 1;
-    background: rgba(255,255,255,.15);
+    opacity: 1; background: rgba(255,255,255,.2);
   }
   .btn-nova {
-    background: #2563eb;
-    color: #fff;
-    border: none;
-    padding: 8px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: .85em;
-    font-weight: 600;
-    white-space: nowrap;
+    background: #16a34a; color: #fff; border: none;
+    padding: 8px 14px; border-radius: 8px;
+    cursor: pointer; font-size: 14px; font-weight: 600;
+    white-space: nowrap; transition: background .15s;
   }
-  .btn-nova:hover { background: #1d4ed8; }
+  .btn-nova:hover { background: #15803d; }
 
-  /* ===== RESUMO ===== */
-  .resumo {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 15px;
-    background: #1e293b;
-    border-radius: 12px;
-    border: 2px solid #fbbf24;
-  }
-  .resumo .info { font-size: .85em; color: #94a3b8; }
-  .resumo .info b { color: #e2e8f0; }
-  .resumo .total-pend { font-size: 1.1em; font-weight: bold; color: #fbbf24; }
-  .resumo .total-pend b { font-size: 1.2em; }
+  main { padding: 20px; max-width: 1200px; margin: 0 auto; }
 
-  /* ===== FORMULÁRIO ===== */
-  .form-linha {
-    display: grid;
-    grid-template-columns: 1.3fr 100px 1.5fr 130px auto;
-    gap: 6px;
-  }
-  @media (max-width: 800px) {
-    .form-linha { grid-template-columns: 1fr 1fr; }
-    .form-linha button { grid-column: span 2; }
-  }
-  input[type="text"], input[type="number"], input[type="date"] {
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #334155;
-    background: #0f172a;
-    color: white;
-    font-size: .9em;
-    width: 100%;
-  }
-  input:focus { outline: none; border-color: #fbbf24; }
-  input::placeholder { color: #64748b; }
-  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+  .titulo-empresa { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .resumo { font-size: 14px; color: #64748b; margin-bottom: 20px; }
+  .resumo strong { color: #dc2626; }
 
-  button {
-    padding: 10px 14px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: .85em;
-    color: white;
-    transition: .15s;
+  #status {
+    font-size: 12px; text-align: center; padding: 6px;
+    border-radius: 6px; background: #fef3c7; color: #92400e;
+    margin-bottom: 12px; font-weight: 600;
   }
-  .btn-verde { background: #16a34a; }
-  .btn-verde:hover { background: #15803d; }
-  .btn-azul { background: #2563eb; }
-  .btn-azul:hover { background: #1d4ed8; }
-  .btn-cinza { background: #475569; }
-  .btn-cinza:hover { background: #334155; }
-  .btn-vermelho { background: #dc2626; }
-  .btn-vermelho:hover { background: #b91c1c; }
+  #status.ok { background: #dcfce7; color: #166534; }
+  #status.erro { background: #fee2e2; color: #991b1b; }
 
-  /* ===== COLUNAS ===== */
-  .colunas {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+  .form-box {
+    background: #fff; border-radius: 10px; padding: 16px;
+    margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;
   }
-  @media (max-width: 800px) {
-    .colunas { grid-template-columns: 1fr; }
+  .form-box .campo { display: flex; flex-direction: column; flex: 1; min-width: 140px; }
+  .form-box label { font-size: 12px; color: #64748b; margin-bottom: 4px; font-weight: 600; }
+  .form-box input {
+    padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px;
+    font-size: 14px; outline: none; transition: border .15s;
+    background: #fff; color: #222;
   }
+  .form-box input:focus { border-color: #3b82f6; }
+  .btn-add {
+    background: #16a34a; color: #fff; border: none;
+    padding: 9px 20px; border-radius: 6px; font-size: 14px;
+    font-weight: 600; cursor: pointer; transition: background .15s;
+    height: 38px;
+  }
+  .btn-add:hover { background: #15803d; }
+
+  .colunas { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .colunas { grid-template-columns: 1fr; } }
 
   .coluna {
-    background: #1e293b;
-    border-radius: 12px;
-    padding: 14px;
-    min-height: 200px;
+    background: #fff; border-radius: 10px; padding: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08); min-height: 200px;
   }
   .coluna h2 {
-    font-size: .9em;
-    margin-bottom: 12px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #334155;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    font-size: 15px; font-weight: 700; margin-bottom: 12px;
+    padding-bottom: 10px; border-bottom: 2px solid #e2e8f0;
+    display: flex; justify-content: space-between; align-items: center;
   }
-  .coluna.pendente h2 { color: #fbbf24; border-color: #78350f; }
-  .coluna.concluido h2 { color: #16a34a; border-color: #14532d; }
+  .coluna.pendente h2 { color: #d97706; border-color: #fde68a; }
+  .coluna.concluido h2 { color: #16a34a; border-color: #bbf7d0; }
   .contador {
-    background: #0f172a;
-    color: #94a3b8;
-    font-size: .8em;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-weight: 600;
+    background: #f1f5f9; color: #475569; font-size: 12px;
+    padding: 2px 8px; border-radius: 10px; font-weight: 600;
   }
 
-  /* ===== CARD ===== */
-  .item {
-    background: #0f172a;
-    border-radius: 8px;
-    margin-bottom: 8px;
-    border-left: 3px solid #f59e0b;
-    padding: 12px;
-    transition: .15s;
+  .card {
+    background: #f8fafc; border: 1px solid #e2e8f0;
+    border-left: 4px solid #f59e0b; border-radius: 8px;
+    padding: 12px; margin-bottom: 10px;
+    transition: transform .1s, box-shadow .1s;
   }
-  .item:hover { box-shadow: 0 2px 8px rgba(0,0,0,.3); }
-  .item.concluido { border-left-color: #16a34a; opacity: .85; }
-
-  .item .linha1 {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 6px;
-    gap: 8px;
+  .card:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  .card.concluido-card { border-left-color: #16a34a; opacity: .85; }
+  .card .linha1 {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 6px; gap: 8px;
   }
-  .item .fornecedor { font-weight: 700; font-size: .95em; color: #e2e8f0; word-break: break-word; }
-  .item .valor { font-weight: 700; font-size: .95em; color: #fbbf24; white-space: nowrap; }
-  .item.concluido .valor { color: #16a34a; }
-  .item .desc { font-size: .8em; color: #94a3b8; margin-bottom: 6px; word-break: break-word; }
-  .item .meta { font-size: .75em; color: #64748b; margin-bottom: 10px; }
-  .item .acoes { display: flex; gap: 6px; flex-wrap: wrap; }
-  .item .acoes button {
-    padding: 6px 10px;
-    font-size: .8em;
-    border-radius: 6px;
+  .card .fornecedor {
+    font-weight: 700; font-size: 15px; color: #1e293b; word-break: break-word;
   }
-  .btn-nf { background: #16a34a; }
+  .card .valor {
+    font-weight: 700; font-size: 15px; color: #dc2626; white-space: nowrap;
+  }
+  .card.concluido-card .valor { color: #16a34a; }
+  .card .desc { font-size: 13px; color: #64748b; margin-bottom: 8px; word-break: break-word; }
+  .card .meta { font-size: 12px; color: #94a3b8; margin-bottom: 10px; }
+  .card .acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+  .card button {
+    border: none; padding: 6px 12px; border-radius: 6px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-nf { background: #16a34a; color: #fff; }
   .btn-nf:hover { background: #15803d; }
-  .btn-voltar { background: #475569; }
-  .btn-voltar:hover { background: #334155; }
-  .btn-editar { background: #2563eb; }
-  .btn-editar:hover { background: #1d4ed8; }
-  .btn-excluir { background: #7f1d1d; }
-  .btn-excluir:hover { background: #991b1b; }
+  .btn-voltar { background: #e2e8f0; color: #475569; }
+  .btn-voltar:hover { background: #cbd5e1; }
+  .btn-editar { background: #dbeafe; color: #1d4ed8; }
+  .btn-editar:hover { background: #bfdbfe; }
+  .btn-excluir { background: #fee2e2; color: #dc2626; }
+  .btn-excluir:hover { background: #fecaca; }
 
   .vazio {
-    text-align: center;
-    padding: 25px 10px;
-    font-size: .85em;
-    opacity: .5;
-    font-style: italic;
+    text-align: center; color: #94a3b8; font-size: 13px;
+    padding: 30px 10px; font-style: italic;
   }
 
-  /* ===== MODAL ===== */
   .modal-fundo {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.7);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-    padding: 15px;
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.5); z-index: 200;
+    align-items: center; justify-content: center; padding: 20px;
   }
   .modal-fundo.aberto { display: flex; }
   .modal {
-    background: #1e293b;
-    border-radius: 12px;
-    padding: 20px;
-    width: 100%;
-    max-width: 450px;
-    box-shadow: 0 10px 40px rgba(0,0,0,.5);
+    background: #fff; border-radius: 12px; padding: 22px;
+    width: 100%; max-width: 480px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.25);
   }
-  .modal h3 {
-    font-size: 1.05em;
-    margin-bottom: 15px;
-    color: #fbbf24;
-  }
-  .modal .campo { display: flex; flex-direction: column; margin-bottom: 10px; }
-  .modal label {
-    font-size: .75em;
-    color: #94a3b8;
-    margin-bottom: 4px;
-    font-weight: 600;
-  }
+  .modal h3 { font-size: 18px; margin-bottom: 16px; color: #1e293b; }
+  .modal .campo { display: flex; flex-direction: column; margin-bottom: 12px; }
+  .modal label { font-size: 12px; color: #64748b; margin-bottom: 4px; font-weight: 600; }
   .modal input {
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #334155;
-    background: #0f172a;
-    color: white;
-    font-size: .9em;
-    width: 100%;
+    padding: 9px 11px; border: 1px solid #cbd5e1;
+    border-radius: 6px; font-size: 14px; outline: none;
+    transition: border .15s;
   }
-  .modal input:focus { outline: none; border-color: #fbbf24; }
+  .modal input:focus { border-color: #3b82f6; }
   .modal .botoes {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    margin-top: 15px;
+    display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px;
   }
+  .modal .botoes button {
+    padding: 9px 18px; border-radius: 6px; font-size: 14px;
+    font-weight: 600; cursor: pointer; border: none;
+    transition: background .15s;
+  }
+  .btn-cancelar { background: #e2e8f0; color: #475569; }
+  .btn-cancelar:hover { background: #cbd5e1; }
+  .btn-salvar { background: #3b82f6; color: #fff; }
+  .btn-salvar:hover { background: #2563eb; }
 </style>
 </head>
 <body>
 
-<h1>💸 Controle PIX x NF</h1>
+<header>
+  <h1>🏢 Empresas</h1>
+  <div class="empresas" id="empresasBar"></div>
+</header>
 
-<div class="app">
-
+<main>
   <div id="status">🔄 Conectando...</div>
 
-  <!-- Barra de empresas -->
-  <div class="card">
-    <h2>🏢 Empresas</h2>
-    <div class="empresas-bar" id="empresasBar"></div>
-  </div>
+  <div class="titulo-empresa" id="tituloEmpresa"></div>
+  <div class="resumo" id="resumo"></div>
 
-  <!-- Resumo -->
-  <div class="resumo">
-    <div class="info">
-      <b id="nomeEmpresaAtual">—</b><br>
-      <span id="infoPendentes">0 PIX aguardando NF</span>
+  <div class="form-box">
+    <div class="campo">
+      <label>Fornecedor / Empresa</label>
+      <input type="text" id="inpFornecedor" placeholder="Ex: Papelaria ABC">
     </div>
-    <div class="total-pend">
-      Pendente: <b id="totalPendente">R$ 0,00</b>
+    <div class="campo">
+      <label>Valor do PIX (R$)</label>
+      <input type="text" id="inpValor" placeholder="Ex: 15000 ou 15.000,00" inputmode="decimal" autocomplete="off">
     </div>
-  </div>
-
-  <!-- Formulário -->
-  <div class="card">
-    <h2>➕ Adicionar PIX</h2>
-    <div class="form-linha">
-      <input type="text" id="inpFornecedor" placeholder="Fornecedor / empresa">
-      <input type="number" id="inpValor" placeholder="Valor R$" step="0.01" min="0">
-      <input type="text" id="inpDesc" placeholder="Descrição (opcional)">
+    <div class="campo">
+      <label>Descrição</label>
+      <input type="text" id="inpDesc" placeholder="Ex: Material de escritório">
+    </div>
+    <div class="campo">
+      <label>Data do PIX</label>
       <input type="date" id="inpData">
-      <button class="btn-verde" onclick="adicionarPix()">Adicionar</button>
     </div>
+    <button class="btn-add" onclick="adicionarPix()">+ Adicionar PIX</button>
   </div>
 
-  <!-- Colunas -->
   <div class="colunas">
     <div class="coluna pendente">
       <h2>Aguardando NF <span class="contador" id="contPendente">0</span></h2>
@@ -333,8 +226,7 @@
       <div id="listaConcluido"></div>
     </div>
   </div>
-
-</div>
+</main>
 
 <!-- MODAL DE EDIÇÃO -->
 <div class="modal-fundo" id="modalFundo">
@@ -346,7 +238,7 @@
     </div>
     <div class="campo">
       <label>Valor do PIX (R$)</label>
-      <input type="number" id="editValor" step="0.01" min="0">
+      <input type="text" id="editValor" inputmode="decimal" autocomplete="off">
     </div>
     <div class="campo">
       <label>Descrição</label>
@@ -357,8 +249,8 @@
       <input type="date" id="editData">
     </div>
     <div class="botoes">
-      <button class="btn-cinza" onclick="fecharModal()">Cancelar</button>
-      <button class="btn-azul" onclick="salvarEdicao()">💾 Salvar</button>
+      <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-salvar" onclick="salvarEdicao()">💾 Salvar</button>
     </div>
   </div>
 </div>
@@ -395,8 +287,8 @@ const COL_EMPRESAS = 'empresas';
 const COL_PIX = 'pix';
 
 // ===== ESTADO =====
-let empresas = [];       // [{id, nome, criadoEm}]
-let pix = [];            // [{id, empresaId, fornecedor, valor, descricao, data, concluido}]
+let empresas = [];
+let pix = [];
 let empresaAtualId = null;
 let editandoId = null;
 
@@ -406,7 +298,14 @@ function setStatus(msg, tipo = '') {
   statusEl.textContent = msg;
   statusEl.className = tipo;
 }
-const fmt = (n) => 'R$ ' + Number(n || 0).toFixed(2).replace('.', ',');
+
+// Formata número para R$ 15.000,00
+function fmt(n) {
+  return 'R$ ' + Number(n || 0).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
 
 function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
@@ -420,13 +319,68 @@ function formatarData(iso) {
   return `${d}/${m}/${a}`;
 }
 
+// ===== PARSER DE VALOR INTELIGENTE =====
+// Aceita: 15000, 15.000, 15.000,00, 15000,50, 15,50, 1.500, 15.5, R$ 15.000,00...
+function parseValorBR(str) {
+  if (str == null) return NaN;
+  let s = String(str).replace(/[^\d.,]/g, '');
+  if (!s) return NaN;
+
+  const temPonto = s.includes('.');
+  const temVirgula = s.includes(',');
+
+  let normalizado;
+
+  if (temPonto && temVirgula) {
+    // Ambos: o que vier por último é o decimal
+    const ultimoPonto = s.lastIndexOf('.');
+    const ultimaVirgula = s.lastIndexOf(',');
+    if (ultimaVirgula > ultimoPonto) {
+      normalizado = s.replace(/\./g, '').replace(/,/g, '.');
+    } else {
+      normalizado = s.replace(/,/g, '');
+    }
+  } else if (temVirgula) {
+    normalizado = s.replace(/,/g, '.');
+  } else if (temPonto) {
+    const partes = s.split('.');
+    const ultimoGrupo = partes[partes.length - 1];
+    if (partes.length > 2) {
+      normalizado = s.replace(/\./g, '');
+    } else if (ultimoGrupo.length === 3) {
+      normalizado = s.replace(/\./g, '');
+    } else if (ultimoGrupo.length === 1 || ultimoGrupo.length === 2) {
+      normalizado = s;
+    } else {
+      normalizado = s.replace(/\./g, '');
+    }
+  } else {
+    normalizado = s;
+  }
+
+  const n = parseFloat(normalizado);
+  return isNaN(n) ? NaN : n;
+}
+
+function formatarInputValor(input) {
+  const n = parseValorBR(input.value);
+  if (isNaN(n)) {
+    input.value = '';
+    return;
+  }
+  input.value = fmt(n);
+}
+
 // ===== EMPRESAS: RENDER =====
 function renderEmpresas() {
   const bar = document.getElementById('empresasBar');
   bar.innerHTML = '';
 
   if (empresas.length === 0) {
-    bar.innerHTML = '<span style="font-size:.8em; color:#64748b; padding:8px;">Nenhuma empresa. Clique em "+ Nova empresa".</span>';
+    const aviso = document.createElement('span');
+    aviso.style.cssText = 'font-size:12px;color:#94a3b8;padding:8px;';
+    aviso.textContent = 'Nenhuma empresa. Clique em "+ Nova empresa".';
+    bar.appendChild(aviso);
   }
 
   empresas.forEach(emp => {
@@ -524,12 +478,9 @@ async function excluirEmpresa(emp) {
   if (!confirm(msg)) return;
 
   try {
-    // apaga os PIX da empresa primeiro
     const aPagar = pix.filter(p => p.empresaId === emp.id);
     await Promise.all(aPagar.map(p => deleteDoc(doc(db, COL_PIX, p.id))));
-    // apaga a empresa
     await deleteDoc(doc(db, COL_EMPRESAS, emp.id));
-    // se era a atual, muda pra primeira que sobrar
     if (empresaAtualId === emp.id) {
       const restante = empresas.find(e => e.id !== emp.id);
       empresaAtualId = restante ? restante.id : null;
@@ -540,7 +491,7 @@ async function excluirEmpresa(emp) {
   }
 }
 
-// ===== PIX: RENDER =====
+// ===== RENDER GERAL =====
 function renderTudo() {
   renderEmpresas();
 
@@ -549,13 +500,14 @@ function renderTudo() {
   }
 
   const empresaAtual = empresas.find(e => e.id === empresaAtualId);
-  document.getElementById('nomeEmpresaAtual').textContent = empresaAtual ? empresaAtual.nome : '—';
+  document.getElementById('tituloEmpresa').textContent =
+    empresaAtual ? empresaAtual.nome : '—';
 
   if (!empresaAtualId) {
-    document.getElementById('listaPendente').innerHTML = '<div class="vazio">Crie uma empresa primeiro.</div>';
+    document.getElementById('resumo').innerHTML = 'Crie uma empresa para começar.';
+    document.getElementById('listaPendente').innerHTML =
+      '<div class="vazio">Crie uma empresa primeiro.</div>';
     document.getElementById('listaConcluido').innerHTML = '';
-    document.getElementById('infoPendentes').textContent = '0 PIX aguardando NF';
-    document.getElementById('totalPendente').textContent = fmt(0);
     document.getElementById('contPendente').textContent = 0;
     document.getElementById('contConcluido').textContent = 0;
     return;
@@ -566,9 +518,9 @@ function renderTudo() {
   const concluidos = meus.filter(p => p.concluido);
 
   const totalPendente = pendentes.reduce((s, p) => s + (parseFloat(p.valor) || 0), 0);
-  document.getElementById('infoPendentes').textContent =
-    `${pendentes.length} PIX aguardando NF`;
-  document.getElementById('totalPendente').textContent = fmt(totalPendente);
+  document.getElementById('resumo').innerHTML =
+    `<strong>${pendentes.length}</strong> PIX aguardando NF &nbsp;•&nbsp; Total pendente: <strong>${fmt(totalPendente)}</strong>`;
+
   document.getElementById('contPendente').textContent = pendentes.length;
   document.getElementById('contConcluido').textContent = concluidos.length;
 
@@ -589,12 +541,11 @@ function renderTudo() {
 
 function criarCard(item) {
   const dataFmt = item.data ? formatarData(item.data) : '—';
-  const valorFmt = (parseFloat(item.valor) || 0).toFixed(2).replace('.', ',');
   return `
-    <div class="item ${item.concluido ? 'concluido' : ''}">
+    <div class="card ${item.concluido ? 'concluido-card' : ''}">
       <div class="linha1">
         <span class="fornecedor">${escapeHtml(item.fornecedor || '—')}</span>
-        <span class="valor">R$ ${valorFmt}</span>
+        <span class="valor">${fmt(item.valor)}</span>
       </div>
       <div class="desc">${escapeHtml(item.descricao || 'Sem descrição')}</div>
       <div class="meta">📅 PIX em ${dataFmt}</div>
@@ -612,12 +563,14 @@ function criarCard(item) {
 // ===== PIX: AÇÕES =====
 async function adicionarPix() {
   if (!empresaAtualId) { alert('Crie uma empresa primeiro.'); return; }
+
+  const inpValor = document.getElementById('inpValor');
   const fornecedor = document.getElementById('inpFornecedor').value.trim();
-  const valor = parseFloat(document.getElementById('inpValor').value);
+  const valor = parseValorBR(inpValor.value);
   const descricao = document.getElementById('inpDesc').value.trim();
   const data = document.getElementById('inpData').value;
 
-  if (!fornecedor || !valor || valor <= 0) {
+  if (!fornecedor || isNaN(valor) || valor <= 0) {
     alert('Preencha pelo menos Fornecedor e Valor (maior que zero).');
     return;
   }
@@ -634,7 +587,7 @@ async function adicionarPix() {
     });
 
     document.getElementById('inpFornecedor').value = '';
-    document.getElementById('inpValor').value = '';
+    inpValor.value = '';
     document.getElementById('inpDesc').value = '';
     document.getElementById('inpData').value = new Date().toISOString().slice(0, 10);
 
@@ -667,7 +620,7 @@ function abrirModal(id) {
   if (!item) return;
   editandoId = id;
   document.getElementById('editFornecedor').value = item.fornecedor || '';
-  document.getElementById('editValor').value = item.valor || '';
+  document.getElementById('editValor').value = fmt(item.valor);
   document.getElementById('editDesc').value = item.descricao || '';
   document.getElementById('editData').value = item.data || '';
   document.getElementById('modalFundo').classList.add('aberto');
@@ -680,12 +633,13 @@ function fecharModal() {
 }
 
 async function salvarEdicao() {
+  const editValor = document.getElementById('editValor');
   const fornecedor = document.getElementById('editFornecedor').value.trim();
-  const valor = parseFloat(document.getElementById('editValor').value);
+  const valor = parseValorBR(editValor.value);
   const descricao = document.getElementById('editDesc').value.trim();
   const data = document.getElementById('editData').value;
 
-  if (!fornecedor || !valor || valor <= 0) {
+  if (!fornecedor || isNaN(valor) || valor <= 0) {
     alert('Preencha Fornecedor e Valor (maior que zero).');
     return;
   }
@@ -702,12 +656,19 @@ async function salvarEdicao() {
   }
 }
 
-// fechar modal com ESC ou clique fora
+// fechar modal
 document.getElementById('modalFundo').addEventListener('click', (e) => {
   if (e.target.id === 'modalFundo') fecharModal();
 });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && editandoId) fecharModal();
+});
+
+// ===== INPUT DE VALOR: FORMATA NO BLUR E ENTER =====
+const inpValor = document.getElementById('inpValor');
+inpValor.addEventListener('blur', () => formatarInputValor(inpValor));
+inpValor.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') formatarInputValor(inpValor);
 });
 
 // ===== FIRESTORE: ESCUTA EM TEMPO REAL =====
