@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>🛒 Lista de Compras</title>
+<title>💸 Controle PIX x NF</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -15,13 +15,7 @@
   }
   h1 { font-size: 1.3em; text-align: center; margin-bottom: 15px; }
 
-  .app {
-    max-width: 700px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
+  .app { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
 
   .card {
     background: #1e293b;
@@ -37,181 +31,6 @@
     align-items: center;
   }
 
-  /* Abas */
-  .abas {
-    display: flex;
-    gap: 6px;
-    background: #1e293b;
-    padding: 4px;
-    border-radius: 10px;
-  }
-  .aba {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: .85em;
-    background: transparent;
-    color: #94a3b8;
-    transition: .15s;
-  }
-  .aba.ativa { background: #16a34a; color: white; }
-
-  /* Formulário */
-  .form-linha {
-    display: grid;
-    grid-template-columns: 1fr 80px auto;
-    gap: 6px;
-    margin-bottom: 8px;
-  }
-  @media (max-width: 500px) {
-    .form-linha { grid-template-columns: 1fr 70px; }
-    .form-linha button { grid-column: span 2; }
-  }
-  input[type="text"], input[type="number"] {
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #334155;
-    background: #0f172a;
-    color: white;
-    font-size: .9em;
-    width: 100%;
-  }
-  input:focus { outline: none; border-color: #fbbf24; }
-  input::placeholder { color: #64748b; }
-
-  button {
-    padding: 10px 14px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: .85em;
-    color: white;
-  }
-  .btn-verde { background: #16a34a; }
-  .btn-verde:hover { background: #15803d; }
-  .btn-azul { background: #2563eb; }
-  .btn-cinza { background: #475569; }
-  .btn-vermelho { background: #dc2626; }
-
-  /* Busca */
-  .busca {
-    margin-bottom: 10px;
-  }
-
-  /* Catálogo / seleção */
-  .catalogo-lista {
-    max-height: 400px;
-    overflow-y: auto;
-    margin-bottom: 10px;
-  }
-  .produto-sel {
-    display: grid;
-    grid-template-columns: 24px 1fr auto;
-    gap: 10px;
-    align-items: center;
-    padding: 10px;
-    background: #0f172a;
-    border-radius: 8px;
-    margin-bottom: 6px;
-    cursor: pointer;
-    border-left: 3px solid transparent;
-    transition: .15s;
-  }
-  .produto-sel:hover { background: #334155; }
-  .produto-sel.selecionado {
-    border-left-color: #16a34a;
-    background: #14532d33;
-  }
-  .produto-sel input[type="checkbox"] {
-    width: 20px; height: 20px; cursor: pointer; accent-color: #16a34a;
-  }
-  .produto-sel .info .nome { font-weight: 600; font-size: .9em; }
-  .produto-sel .info .det { font-size: .75em; color: #94a3b8; margin-top: 2px; }
-  .produto-sel .info .det .ultimo { color: #38bdf8; }
-  .produto-sel .qtd-input {
-    width: 60px;
-    padding: 6px;
-    font-size: .85em;
-    text-align: center;
-  }
-
-  /* Item da lista */
-  .item {
-    background: #0f172a;
-    border-radius: 8px;
-    margin-bottom: 6px;
-    border-left: 3px solid #475569;
-    overflow: hidden;
-    transition: .15s;
-  }
-  .item.comprado { opacity: .55; border-left-color: #16a34a; }
-  .item.comprado .nome { text-decoration: line-through; }
-
-  .item-linha {
-    display: grid;
-    grid-template-columns: 24px 1fr auto auto;
-    gap: 10px;
-    align-items: center;
-    padding: 10px;
-    cursor: pointer;
-  }
-  .item-linha:hover { background: #1e293b; }
-
-  .item .nome { font-weight: 600; font-size: .9em; }
-  .item .detalhe { font-size: .75em; color: #94a3b8; margin-top: 2px; }
-  .item .detalhe .ultimo { color: #38bdf8; }
-  .item .detalhe .mudou { color: #f87171; }
-  .item .detalhe .sem-preco { color: #64748b; font-style: italic; }
-
-  .item .preco-atual {
-    color: #fbbf24;
-    font-weight: bold;
-    font-size: .9em;
-    white-space: nowrap;
-  }
-  .item .preco-atual.vazio { color: #475569; }
-
-  .item input[type="checkbox"] {
-    width: 18px; height: 18px; cursor: pointer; accent-color: #16a34a;
-  }
-  .item .btn-del {
-    background: transparent;
-    color: #ef4444;
-    padding: 4px 8px;
-    font-size: 1em;
-  }
-  .item .btn-del:hover { background: #7f1d1d; }
-
-  .item-editor {
-    display: none;
-    padding: 10px;
-    background: #1e293b;
-    border-top: 1px solid #334155;
-    gap: 8px;
-    align-items: center;
-  }
-  .item-editor.aberto { display: flex; }
-  .item-editor label { font-size: .8em; color: #94a3b8; white-space: nowrap; }
-  .item-editor input { flex: 1; padding: 8px; }
-  .item-editor .btn-salvar-preco { background: #16a34a; padding: 8px 14px; }
-
-  /* Total */
-  .total {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 15px;
-    background: #1e293b;
-    border-radius: 12px;
-    font-size: 1em;
-    border: 2px solid #fbbf24;
-  }
-  .total b { color: #fbbf24; font-size: 1.2em; }
-
   #status {
     font-size: .75em;
     text-align: center;
@@ -222,119 +41,326 @@
   #status.ok { background: #14532d; }
   #status.erro { background: #7f1d1d; }
 
-  .historico {
-    max-height: 250px;
-    overflow-y: auto;
-    font-size: .8em;
+  /* ===== BARRA DE EMPRESAS ===== */
+  .empresas-bar {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    align-items: center;
+    flex-wrap: nowrap;
   }
-  .historico-linha {
+  .empresa-btn {
+    background: #0f172a;
+    color: #94a3b8;
+    border: 1px solid #334155;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: .85em;
+    white-space: nowrap;
+    transition: .15s;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .empresa-btn:hover { background: #334155; color: #fff; }
+  .empresa-btn.ativa {
+    background: #16a34a;
+    border-color: #16a34a;
+    color: #fff;
+  }
+  .empresa-btn .lapis, .empresa-btn .lixo {
+    font-size: .8em;
+    opacity: .6;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: .15s;
+  }
+  .empresa-btn .lapis:hover, .empresa-btn .lixo:hover {
+    opacity: 1;
+    background: rgba(255,255,255,.15);
+  }
+  .btn-nova {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: .85em;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .btn-nova:hover { background: #1d4ed8; }
+
+  /* ===== RESUMO ===== */
+  .resumo {
     display: flex;
     justify-content: space-between;
-    padding: 6px 8px;
-    border-bottom: 1px dashed #334155;
+    align-items: center;
+    padding: 12px 15px;
+    background: #1e293b;
+    border-radius: 12px;
+    border: 2px solid #fbbf24;
   }
-  .historico-linha:last-child { border-bottom: none; }
-  .historico-linha .nome { color: #e2e8f0; }
-  .historico-linha .preco { color: #fbbf24; font-weight: bold; }
+  .resumo .info { font-size: .85em; color: #94a3b8; }
+  .resumo .info b { color: #e2e8f0; }
+  .resumo .total-pend { font-size: 1.1em; font-weight: bold; color: #fbbf24; }
+  .resumo .total-pend b { font-size: 1.2em; }
+
+  /* ===== FORMULÁRIO ===== */
+  .form-linha {
+    display: grid;
+    grid-template-columns: 1.3fr 100px 1.5fr 130px auto;
+    gap: 6px;
+  }
+  @media (max-width: 800px) {
+    .form-linha { grid-template-columns: 1fr 1fr; }
+    .form-linha button { grid-column: span 2; }
+  }
+  input[type="text"], input[type="number"], input[type="date"] {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background: #0f172a;
+    color: white;
+    font-size: .9em;
+    width: 100%;
+  }
+  input:focus { outline: none; border-color: #fbbf24; }
+  input::placeholder { color: #64748b; }
+  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+
+  button {
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: .85em;
+    color: white;
+    transition: .15s;
+  }
+  .btn-verde { background: #16a34a; }
+  .btn-verde:hover { background: #15803d; }
+  .btn-azul { background: #2563eb; }
+  .btn-azul:hover { background: #1d4ed8; }
+  .btn-cinza { background: #475569; }
+  .btn-cinza:hover { background: #334155; }
+  .btn-vermelho { background: #dc2626; }
+  .btn-vermelho:hover { background: #b91c1c; }
+
+  /* ===== COLUNAS ===== */
+  .colunas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 800px) {
+    .colunas { grid-template-columns: 1fr; }
+  }
+
+  .coluna {
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 14px;
+    min-height: 200px;
+  }
+  .coluna h2 {
+    font-size: .9em;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #334155;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .coluna.pendente h2 { color: #fbbf24; border-color: #78350f; }
+  .coluna.concluido h2 { color: #16a34a; border-color: #14532d; }
+  .contador {
+    background: #0f172a;
+    color: #94a3b8;
+    font-size: .8em;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+
+  /* ===== CARD ===== */
+  .item {
+    background: #0f172a;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border-left: 3px solid #f59e0b;
+    padding: 12px;
+    transition: .15s;
+  }
+  .item:hover { box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  .item.concluido { border-left-color: #16a34a; opacity: .85; }
+
+  .item .linha1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    gap: 8px;
+  }
+  .item .fornecedor { font-weight: 700; font-size: .95em; color: #e2e8f0; word-break: break-word; }
+  .item .valor { font-weight: 700; font-size: .95em; color: #fbbf24; white-space: nowrap; }
+  .item.concluido .valor { color: #16a34a; }
+  .item .desc { font-size: .8em; color: #94a3b8; margin-bottom: 6px; word-break: break-word; }
+  .item .meta { font-size: .75em; color: #64748b; margin-bottom: 10px; }
+  .item .acoes { display: flex; gap: 6px; flex-wrap: wrap; }
+  .item .acoes button {
+    padding: 6px 10px;
+    font-size: .8em;
+    border-radius: 6px;
+  }
+  .btn-nf { background: #16a34a; }
+  .btn-nf:hover { background: #15803d; }
+  .btn-voltar { background: #475569; }
+  .btn-voltar:hover { background: #334155; }
+  .btn-editar { background: #2563eb; }
+  .btn-editar:hover { background: #1d4ed8; }
+  .btn-excluir { background: #7f1d1d; }
+  .btn-excluir:hover { background: #991b1b; }
 
   .vazio {
     text-align: center;
-    padding: 20px;
+    padding: 25px 10px;
     font-size: .85em;
     opacity: .5;
+    font-style: italic;
   }
 
-  .acoes {
+  /* ===== MODAL ===== */
+  .modal-fundo {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+  }
+  .modal-fundo.aberto { display: flex; }
+  .modal {
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 20px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.5);
+  }
+  .modal h3 {
+    font-size: 1.05em;
+    margin-bottom: 15px;
+    color: #fbbf24;
+  }
+  .modal .campo { display: flex; flex-direction: column; margin-bottom: 10px; }
+  .modal label {
+    font-size: .75em;
+    color: #94a3b8;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .modal input {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background: #0f172a;
+    color: white;
+    font-size: .9em;
+    width: 100%;
+  }
+  .modal input:focus { outline: none; border-color: #fbbf24; }
+  .modal .botoes {
     display: flex;
-    gap: 6px;
-    margin-top: 8px;
-  }
-  .acoes button { flex: 1; }
-
-  .badge {
-    font-size: .7em;
-    background: #fbbf24;
-    color: #0f172a;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-weight: bold;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 15px;
   }
 </style>
 </head>
 <body>
 
-<h1>🛒 Lista de Compras</h1>
+<h1>💸 Controle PIX x NF</h1>
 
 <div class="app">
 
   <div id="status">🔄 Conectando...</div>
 
-  <!-- Abas -->
-  <div class="abas">
-    <button class="aba ativa" id="abaLista" onclick="mudarAba('lista')">📝 Lista atual</button>
-    <button class="aba" id="abaNova" onclick="mudarAba('nova')">➕ Nova lista</button>
-    <button class="aba" id="abaProdutos" onclick="mudarAba('produtos')">📦 Produtos</button>
+  <!-- Barra de empresas -->
+  <div class="card">
+    <h2>🏢 Empresas</h2>
+    <div class="empresas-bar" id="empresasBar"></div>
   </div>
 
-  <!-- ===== ABA: LISTA ATUAL ===== -->
-  <div id="telaLista">
-    <div class="card">
-      <h2>
-        <span>📝 Lista atual</span>
-        <button class="btn-cinza" style="padding:4px 10px; font-size:.75em;" onclick="limparComprados()">🧹 Limpar comprados</button>
-      </h2>
-      <div id="lista"></div>
+  <!-- Resumo -->
+  <div class="resumo">
+    <div class="info">
+      <b id="nomeEmpresaAtual">—</b><br>
+      <span id="infoPendentes">0 PIX aguardando NF</span>
     </div>
-
-    <div class="total" style="margin-top:12px;">
-      <span>💰 Total da lista</span>
-      <b id="total">R$ 0,00</b>
+    <div class="total-pend">
+      Pendente: <b id="totalPendente">R$ 0,00</b>
     </div>
   </div>
 
-  <!-- ===== ABA: NOVA LISTA ===== -->
-  <div id="telaNova" style="display:none;">
-    <div class="card">
-      <h2>➕ Montar nova lista</h2>
-      <div class="busca">
-        <input type="text" id="buscaProduto" placeholder="🔍 Buscar produto..." oninput="renderizarCatalogo()">
-      </div>
-      <div class="catalogo-lista" id="catalogoLista"></div>
-      <div class="acoes">
-        <button class="btn-verde" onclick="criarListaComSelecionados()">✅ Criar lista com selecionados</button>
-      </div>
-      <div style="font-size:.75em; color:#94a3b8; margin-top:8px; text-align:center;">
-        Produto não está na lista? Vá em <b>📦 Produtos</b> e cadastre.
-      </div>
+  <!-- Formulário -->
+  <div class="card">
+    <h2>➕ Adicionar PIX</h2>
+    <div class="form-linha">
+      <input type="text" id="inpFornecedor" placeholder="Fornecedor / empresa">
+      <input type="number" id="inpValor" placeholder="Valor R$" step="0.01" min="0">
+      <input type="text" id="inpDesc" placeholder="Descrição (opcional)">
+      <input type="date" id="inpData">
+      <button class="btn-verde" onclick="adicionarPix()">Adicionar</button>
     </div>
   </div>
 
-  <!-- ===== ABA: PRODUTOS (catálogo) ===== -->
-  <div id="telaProdutos" style="display:none;">
-    <div class="card">
-      <h2>📦 Cadastrar produto</h2>
-      <div class="form-linha">
-        <input type="text" id="novoProdutoNome" placeholder="Nome do produto" autocomplete="off">
-        <input type="number" id="novoProdutoPreco" placeholder="Últ. preço" step="0.01" min="0">
-        <button class="btn-verde" onclick="cadastrarProduto()">Adicionar</button>
-      </div>
-      <div style="font-size:.75em; color:#94a3b8; margin-top:6px;">
-        💡 O preço é opcional — pode cadastrar só o nome agora e definir o preço no mercado.
-      </div>
+  <!-- Colunas -->
+  <div class="colunas">
+    <div class="coluna pendente">
+      <h2>Aguardando NF <span class="contador" id="contPendente">0</span></h2>
+      <div id="listaPendente"></div>
     </div>
-
-    <div class="card" style="margin-top:12px;">
-      <h2>
-        <span>📦 Produtos cadastrados</span>
-        <span class="badge" id="badgeProdutos">0</span>
-      </h2>
-      <div class="busca">
-        <input type="text" id="buscaProdutosCad" placeholder="🔍 Buscar..." oninput="renderizarProdutosCadastrados()">
-      </div>
-      <div class="historico" id="produtosCadastrados" style="max-height:400px;"></div>
+    <div class="coluna concluido">
+      <h2>NF Recebidas <span class="contador" id="contConcluido">0</span></h2>
+      <div id="listaConcluido"></div>
     </div>
   </div>
 
+</div>
+
+<!-- MODAL DE EDIÇÃO -->
+<div class="modal-fundo" id="modalFundo">
+  <div class="modal">
+    <h3>✏️ Editar registro</h3>
+    <div class="campo">
+      <label>Fornecedor / Empresa</label>
+      <input type="text" id="editFornecedor">
+    </div>
+    <div class="campo">
+      <label>Valor do PIX (R$)</label>
+      <input type="number" id="editValor" step="0.01" min="0">
+    </div>
+    <div class="campo">
+      <label>Descrição</label>
+      <input type="text" id="editDesc">
+    </div>
+    <div class="campo">
+      <label>Data do PIX</label>
+      <input type="date" id="editData">
+    </div>
+    <div class="botoes">
+      <button class="btn-cinza" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-azul" onclick="salvarEdicao()">💾 Salvar</button>
+    </div>
+  </div>
 </div>
 
 <script type="importmap">
@@ -350,10 +376,10 @@
 import { initializeApp } from "firebase/app";
 import {
   getFirestore, collection, addDoc, deleteDoc, doc,
-  updateDoc, onSnapshot, query, orderBy, where, getDocs, setDoc
+  updateDoc, onSnapshot
 } from "firebase/firestore";
 
-// ===== CONFIG (mantenha a sua) =====
+// ===== CONFIG (a mesma do seu app) =====
 const firebaseConfig = {
   apiKey: "AIzaSyAyAtL3v2jSnUd4gGAU0zWXhqI84kngsio",
   authDomain: "fiscalizador-preco.firebaseapp.com",
@@ -365,345 +391,359 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const COL_ITENS = 'compras';        // itens da lista atual
-const COL_PRODUTOS = 'produtos';    // catálogo de produtos
+const COL_EMPRESAS = 'empresas';
+const COL_PIX = 'pix';
 
 // ===== ESTADO =====
-let itens = [];            // lista atual
-let produtos = [];         // catálogo
-let selecionados = new Map(); // idProduto -> {nome, qtd}
-let editorAberto = null;
-let abaAtual = 'lista';
+let empresas = [];       // [{id, nome, criadoEm}]
+let pix = [];            // [{id, empresaId, fornecedor, valor, descricao, data, concluido}]
+let empresaAtualId = null;
+let editandoId = null;
 
+// ===== HELPERS =====
 const statusEl = document.getElementById('status');
 function setStatus(msg, tipo = '') {
   statusEl.textContent = msg;
   statusEl.className = tipo;
 }
-const fmt = (n) => 'R$ ' + Number(n).toFixed(2).replace('.', ',');
+const fmt = (n) => 'R$ ' + Number(n || 0).toFixed(2).replace('.', ',');
 
-// ===== ABAS =====
-window.mudarAba = function(aba) {
-  abaAtual = aba;
-  document.getElementById('telaLista').style.display    = aba === 'lista'    ? 'block' : 'none';
-  document.getElementById('telaNova').style.display     = aba === 'nova'     ? 'block' : 'none';
-  document.getElementById('telaProdutos').style.display = aba === 'produtos' ? 'block' : 'none';
-  document.getElementById('abaLista').classList.toggle('ativa', aba === 'lista');
-  document.getElementById('abaNova').classList.toggle('ativa', aba === 'nova');
-  document.getElementById('abaProdutos').classList.toggle('ativa', aba === 'produtos');
-
-  if (aba === 'nova') renderizarCatalogo();
-  if (aba === 'produtos') renderizarProdutosCadastrados();
-};
-
-// ===== HISTÓRICO: último preço por produto =====
-function calcularHistorico(lista) {
-  const mapa = {};
-  const ordenados = [...lista].sort((a, b) => (a.data || '').localeCompare(b.data || ''));
-  ordenados.forEach(item => {
-    if (!item.preco || item.preco <= 0) return;
-    const chave = item.nome.toLowerCase().trim();
-    mapa[chave] = { nome: item.nome, preco: item.preco, data: item.data };
-  });
-  return Object.values(mapa);
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
 }
 
-// ===== CATÁLOGO: mescla produtos cadastrados + itens já comprados =====
-function catalogoCompleto() {
-  const mapa = new Map();
-  // primeiro os produtos cadastrados
-  produtos.forEach(p => {
-    const k = p.nome.toLowerCase().trim();
-    mapa.set(k, { id: p.id, nome: p.nome, ultimoPreco: p.ultimoPreco || null });
+function formatarData(iso) {
+  if (!iso) return '—';
+  const [a, m, d] = iso.split('-');
+  return `${d}/${m}/${a}`;
+}
+
+// ===== EMPRESAS: RENDER =====
+function renderEmpresas() {
+  const bar = document.getElementById('empresasBar');
+  bar.innerHTML = '';
+
+  if (empresas.length === 0) {
+    bar.innerHTML = '<span style="font-size:.8em; color:#64748b; padding:8px;">Nenhuma empresa. Clique em "+ Nova empresa".</span>';
+  }
+
+  empresas.forEach(emp => {
+    const btn = document.createElement('button');
+    btn.className = 'empresa-btn' + (emp.id === empresaAtualId ? ' ativa' : '');
+    btn.title = 'Clique para abrir | ✏️ renomear | 🗑 excluir';
+
+    const nome = document.createElement('span');
+    nome.textContent = emp.nome;
+    nome.onclick = (e) => {
+      e.stopPropagation();
+      empresaAtualId = emp.id;
+      renderTudo();
+    };
+    btn.appendChild(nome);
+
+    const lapis = document.createElement('span');
+    lapis.className = 'lapis';
+    lapis.textContent = '✏️';
+    lapis.title = 'Renomear';
+    lapis.onclick = (e) => {
+      e.stopPropagation();
+      renomearEmpresa(emp);
+    };
+    btn.appendChild(lapis);
+
+    const lixo = document.createElement('span');
+    lixo.className = 'lixo';
+    lixo.textContent = '🗑';
+    lixo.title = 'Excluir empresa';
+    lixo.onclick = (e) => {
+      e.stopPropagation();
+      excluirEmpresa(emp);
+    };
+    btn.appendChild(lixo);
+
+    bar.appendChild(btn);
   });
-  // depois itens de compras (atualiza último preço e cria se não existir)
-  const hist = calcularHistorico(itens);
-  hist.forEach(h => {
-    const k = h.nome.toLowerCase().trim();
-    if (mapa.has(k)) {
-      mapa.get(k).ultimoPreco = h.preco;
-    } else {
-      mapa.set(k, { id: 'temp-' + k, nome: h.nome, ultimoPreco: h.preco });
+
+  const btnNova = document.createElement('button');
+  btnNova.className = 'btn-nova';
+  btnNova.textContent = '+ Nova empresa';
+  btnNova.onclick = novaEmpresa;
+  bar.appendChild(btnNova);
+}
+
+// ===== EMPRESAS: AÇÕES =====
+async function novaEmpresa() {
+  const nome = prompt('Nome da nova empresa:');
+  if (nome === null) return;
+  const limpo = nome.trim();
+  if (!limpo) { alert('Digite um nome válido.'); return; }
+  if (empresas.some(e => e.nome.toLowerCase() === limpo.toLowerCase())) {
+    alert('Já existe uma empresa com esse nome.');
+    return;
+  }
+  try {
+    const ref = await addDoc(collection(db, COL_EMPRESAS), {
+      nome: limpo,
+      criadoEm: new Date().toISOString()
+    });
+    empresaAtualId = ref.id;
+    setStatus('✅ Empresa criada', 'ok');
+  } catch (e) {
+    alert('Erro ao criar: ' + e.message);
+  }
+}
+
+async function renomearEmpresa(emp) {
+  const novo = prompt(`Renomear "${emp.nome}" para:`, emp.nome);
+  if (novo === null) return;
+  const limpo = novo.trim();
+  if (!limpo || limpo === emp.nome) return;
+  if (empresas.some(e => e.id !== emp.id && e.nome.toLowerCase() === limpo.toLowerCase())) {
+    alert('Já existe uma empresa com esse nome.');
+    return;
+  }
+  try {
+    await updateDoc(doc(db, COL_EMPRESAS, emp.id), { nome: limpo });
+    setStatus('✅ Empresa renomeada', 'ok');
+  } catch (e) {
+    alert('Erro ao renomear: ' + e.message);
+  }
+}
+
+async function excluirEmpresa(emp) {
+  if (empresas.length === 1) {
+    alert('Você precisa ter pelo menos 1 empresa.');
+    return;
+  }
+  const qtd = pix.filter(p => p.empresaId === emp.id).length;
+  const msg = qtd > 0
+    ? `A empresa "${emp.nome}" tem ${qtd} registro(s). Excluir mesmo assim?`
+    : `Excluir a empresa "${emp.nome}"?`;
+  if (!confirm(msg)) return;
+
+  try {
+    // apaga os PIX da empresa primeiro
+    const aPagar = pix.filter(p => p.empresaId === emp.id);
+    await Promise.all(aPagar.map(p => deleteDoc(doc(db, COL_PIX, p.id))));
+    // apaga a empresa
+    await deleteDoc(doc(db, COL_EMPRESAS, emp.id));
+    // se era a atual, muda pra primeira que sobrar
+    if (empresaAtualId === emp.id) {
+      const restante = empresas.find(e => e.id !== emp.id);
+      empresaAtualId = restante ? restante.id : null;
     }
-  });
-  return [...mapa.values()].sort((a, b) => a.nome.localeCompare(b.nome));
+    setStatus('✅ Empresa excluída', 'ok');
+  } catch (e) {
+    alert('Erro ao excluir: ' + e.message);
+  }
 }
 
-// ===== RENDER: CATÁLOGO (tela nova lista) =====
-function renderizarCatalogo() {
-  const el = document.getElementById('catalogoLista');
-  const busca = (document.getElementById('buscaProduto').value || '').toLowerCase().trim();
-  const lista = catalogoCompleto().filter(p => p.nome.toLowerCase().includes(busca));
+// ===== PIX: RENDER =====
+function renderTudo() {
+  renderEmpresas();
 
-  if (lista.length === 0) {
-    el.innerHTML = '<div class="vazio">Nenhum produto. Cadastre na aba 📦 Produtos.</div>';
+  if (!empresaAtualId && empresas.length > 0) {
+    empresaAtualId = empresas[0].id;
+  }
+
+  const empresaAtual = empresas.find(e => e.id === empresaAtualId);
+  document.getElementById('nomeEmpresaAtual').textContent = empresaAtual ? empresaAtual.nome : '—';
+
+  if (!empresaAtualId) {
+    document.getElementById('listaPendente').innerHTML = '<div class="vazio">Crie uma empresa primeiro.</div>';
+    document.getElementById('listaConcluido').innerHTML = '';
+    document.getElementById('infoPendentes').textContent = '0 PIX aguardando NF';
+    document.getElementById('totalPendente').textContent = fmt(0);
+    document.getElementById('contPendente').textContent = 0;
+    document.getElementById('contConcluido').textContent = 0;
     return;
   }
 
-  el.innerHTML = lista.map(p => {
-    const sel = selecionados.has(p.id);
-    const ult = p.ultimoPreco ? `<span class="ultimo">• último: ${fmt(p.ultimoPreco)}</span>` : '<span style="opacity:.5">• sem preço</span>';
-    const qtd = sel ? selecionados.get(p.id).qtd : 1;
-    return `
-      <div class="produto-sel ${sel ? 'selecionado' : ''}" onclick="window.__toggleSelecionado('${p.id}')">
-        <input type="checkbox" ${sel ? 'checked' : ''} onclick="event.stopPropagation(); window.__toggleSelecionado('${p.id}')">
-        <div class="info">
-          <div class="nome">${p.nome}</div>
-          <div class="det">${ult}</div>
-        </div>
-        ${sel
-          ? `<input type="number" class="qtd-input" min="1" value="${qtd}"
-                    onclick="event.stopPropagation()"
-                    onchange="window.__mudarQtd('${p.id}', this.value)">`
-          : '<span style="width:60px"></span>'}
-      </div>
-    `;
-  }).join('');
-}
+  const meus = pix.filter(p => p.empresaId === empresaAtualId);
+  const pendentes = meus.filter(p => !p.concluido);
+  const concluidos = meus.filter(p => p.concluido);
 
-window.__toggleSelecionado = function(id) {
-  if (selecionados.has(id)) {
-    selecionados.delete(id);
+  const totalPendente = pendentes.reduce((s, p) => s + (parseFloat(p.valor) || 0), 0);
+  document.getElementById('infoPendentes').textContent =
+    `${pendentes.length} PIX aguardando NF`;
+  document.getElementById('totalPendente').textContent = fmt(totalPendente);
+  document.getElementById('contPendente').textContent = pendentes.length;
+  document.getElementById('contConcluido').textContent = concluidos.length;
+
+  const divP = document.getElementById('listaPendente');
+  const divC = document.getElementById('listaConcluido');
+
+  if (pendentes.length === 0) {
+    divP.innerHTML = '<div class="vazio">Nenhum PIX pendente 🎉</div>';
   } else {
-    const p = catalogoCompleto().find(x => x.id === id);
-    if (p) selecionados.set(id, { nome: p.nome, qtd: 1, ultimoPreco: p.ultimoPreco });
+    divP.innerHTML = pendentes.map(criarCard).join('');
   }
-  renderizarCatalogo();
-};
-window.__mudarQtd = function(id, v) {
-  const q = parseInt(v) || 1;
-  if (selecionados.has(id)) selecionados.get(id).qtd = q;
-  renderizarCatalogo();
-};
-
-// ===== CRIAR LISTA COM SELECIONADOS =====
-window.criarListaComSelecionados = async function() {
-  if (selecionados.size === 0) {
-    alert('Selecione pelo menos um produto.');
-    return;
+  if (concluidos.length === 0) {
+    divC.innerHTML = '<div class="vazio">Nenhuma NF recebida ainda</div>';
+  } else {
+    divC.innerHTML = concluidos.map(criarCard).join('');
   }
-  const ativos = itens.filter(i => !i.comprado);
-  if (ativos.length > 0) {
-    if (!confirm(`Já existem ${ativos.length} item(ns) na lista atual. Deseja apagá-los e criar a nova lista?`)) return;
-    await Promise.all(ativos.map(i => deleteDoc(doc(db, COL_ITENS, i.id))));
-  }
+}
 
-  const data = new Date().toISOString();
-  await Promise.all([...selecionados.values()].map(s =>
-    addDoc(collection(db, COL_ITENS), {
-      nome: s.nome,
-      qtd: s.qtd,
-      preco: null,
-      comprado: false,
-      data
-    })
-  ));
-
-  selecionados.clear();
-  mudarAba('lista');
-  setStatus('✅ Lista criada!', 'ok');
-};
-
-// ===== RENDER: LISTA ATUAL =====
-function renderizar() {
-  const el = document.getElementById('lista');
-  const ativos = itens.filter(i => !i.comprado);
-  const comprados = itens.filter(i => i.comprado);
-
-  if (itens.length === 0) {
-    el.innerHTML = '<div class="vazio">Nenhum item. Vá em ➕ Nova lista.</div>';
-    document.getElementById('total').textContent = fmt(0);
-    return;
-  }
-
-  const renderItem = (item) => {
-    const h = calcularHistorico(itens).find(x => x.nome.toLowerCase() === item.nome.toLowerCase().trim());
-    const ultimoPreco = h ? h.preco : null;
-    const temPreco = item.preco && item.preco > 0;
-    const mudou = temPreco && ultimoPreco && Math.abs(ultimoPreco - item.preco) > 0.001 &&
-                  item.data !== h.data; // ignora se é o mesmo registro
-    const editorAbertoAqui = editorAberto === item.id;
-
-    let detalhe = `${item.qtd}x`;
-    if (!temPreco) {
-      detalhe += ultimoPreco
-        ? ` <span class="ultimo">• último: ${fmt(ultimoPreco)}</span>`
-        : ` <span class="sem-preco">• sem preço</span>`;
-    } else {
-      detalhe += ` ${fmt(item.preco)} cada = ${fmt(item.preco * item.qtd)}`;
-      if (mudou) detalhe += ` <span class="mudou">(antes ${fmt(ultimoPreco)})</span>`;
-    }
-
-    const precoHtml = temPreco
-      ? `<div class="preco-atual">${fmt(item.preco * item.qtd)}</div>`
-      : `<div class="preco-atual vazio">+ preço</div>`;
-
-    return `
-      <div class="item ${item.comprado ? 'comprado' : ''}">
-        <div class="item-linha" onclick="window.__abrirEditor('${item.id}')">
-          <input type="checkbox" ${item.comprado ? 'checked' : ''}
-                 onclick="event.stopPropagation()"
-                 onchange="window.__toggle('${item.id}', ${!item.comprado})">
-          <div>
-            <div class="nome">${item.nome}</div>
-            <div class="detalhe">${detalhe}</div>
-          </div>
-          ${precoHtml}
-          <button class="btn-del" onclick="event.stopPropagation(); window.__excluir('${item.id}')">✕</button>
-        </div>
-        <div class="item-editor ${editorAbertoAqui ? 'aberto' : ''}">
-          <label>Preço un.:</label>
-          <input type="number" step="0.01" min="0" placeholder="0,00"
-                 value="${temPreco ? item.preco : ''}"
-                 id="preco-${item.id}"
-                 onkeydown="if(event.key==='Enter') window.__salvarPreco('${item.id}')">
-          <button class="btn-salvar-preco" onclick="window.__salvarPreco('${item.id}')">✓</button>
-          <button class="btn-cinza" onclick="event.stopPropagation(); window.__fecharEditor()">✕</button>
-        </div>
+function criarCard(item) {
+  const dataFmt = item.data ? formatarData(item.data) : '—';
+  const valorFmt = (parseFloat(item.valor) || 0).toFixed(2).replace('.', ',');
+  return `
+    <div class="item ${item.concluido ? 'concluido' : ''}">
+      <div class="linha1">
+        <span class="fornecedor">${escapeHtml(item.fornecedor || '—')}</span>
+        <span class="valor">R$ ${valorFmt}</span>
       </div>
-    `;
-  };
-
-  el.innerHTML = ativos.map(renderItem).join('') +
-    (comprados.length ? `<div style="font-size:.7em; color:#64748b; margin:10px 0 4px;">— comprados —</div>` +
-      comprados.map(renderItem).join('') : '');
-
-  const total = ativos.reduce((s, i) => s + (i.preco || 0) * i.qtd, 0);
-  document.getElementById('total').textContent = fmt(total);
-
-  if (editorAberto) {
-    const inp = document.getElementById('preco-' + editorAberto);
-    if (inp) inp.focus();
-  }
+      <div class="desc">${escapeHtml(item.descricao || 'Sem descrição')}</div>
+      <div class="meta">📅 PIX em ${dataFmt}</div>
+      <div class="acoes">
+        ${item.concluido
+          ? `<button class="btn-voltar" onclick="moverItem('${item.id}', false)">↩ Voltar</button>`
+          : `<button class="btn-nf" onclick="moverItem('${item.id}', true)">✅ NF chegou</button>`}
+        <button class="btn-editar" onclick="abrirModal('${item.id}')">✏️ Editar</button>
+        <button class="btn-excluir" onclick="excluirItem('${item.id}')">🗑 Excluir</button>
+      </div>
+    </div>
+  `;
 }
 
-// ===== RENDER: PRODUTOS CADASTRADOS =====
-function renderizarProdutosCadastrados() {
-  const el = document.getElementById('produtosCadastrados');
-  const busca = (document.getElementById('buscaProdutosCad').value || '').toLowerCase().trim();
-  const lista = catalogoCompleto().filter(p => p.nome.toLowerCase().includes(busca));
-  document.getElementById('badgeProdutos').textContent = lista.length;
+// ===== PIX: AÇÕES =====
+async function adicionarPix() {
+  if (!empresaAtualId) { alert('Crie uma empresa primeiro.'); return; }
+  const fornecedor = document.getElementById('inpFornecedor').value.trim();
+  const valor = parseFloat(document.getElementById('inpValor').value);
+  const descricao = document.getElementById('inpDesc').value.trim();
+  const data = document.getElementById('inpData').value;
 
-  if (lista.length === 0) {
-    el.innerHTML = '<div class="vazio">Nenhum produto.</div>';
+  if (!fornecedor || !valor || valor <= 0) {
+    alert('Preencha pelo menos Fornecedor e Valor (maior que zero).');
     return;
   }
-  el.innerHTML = lista.map(p => `
-    <div class="historico-linha">
-      <span class="nome">${p.nome}</span>
-      <span>
-        ${p.ultimoPreco ? `<b class="preco">${fmt(p.ultimoPreco)}</b>` : '<span style="opacity:.5; font-size:.85em;">sem preço</span>'}
-        ${p.id && !p.id.startsWith('temp-') ? `<button class="btn-del" style="background:transparent;color:#ef4444;margin-left:6px;" onclick="event.stopPropagation(); window.__excluirProduto('${p.id}', '${p.nome.replace(/'/g,"\\'")}')">✕</button>` : ''}
-      </span>
-    </div>
-  `).join('');
-}
 
-// ===== CADASTRAR PRODUTO =====
-window.cadastrarProduto = async function() {
-  const nome = document.getElementById('novoProdutoNome').value.trim();
-  const preco = parseFloat(document.getElementById('novoProdutoPreco').value) || null;
-  if (!nome) { alert('Digite o nome.'); return; }
+  try {
+    await addDoc(collection(db, COL_PIX), {
+      empresaId: empresaAtualId,
+      fornecedor,
+      valor,
+      descricao,
+      data: data || new Date().toISOString().slice(0, 10),
+      concluido: false,
+      criadoEm: new Date().toISOString()
+    });
 
-  // Verifica duplicata
-  const existe = produtos.find(p => p.nome.toLowerCase().trim() === nome.toLowerCase().trim());
-  if (existe) { alert('Já existe um produto com esse nome.'); return; }
+    document.getElementById('inpFornecedor').value = '';
+    document.getElementById('inpValor').value = '';
+    document.getElementById('inpDesc').value = '';
+    document.getElementById('inpData').value = new Date().toISOString().slice(0, 10);
 
-  await addDoc(collection(db, COL_PRODUTOS), {
-    nome,
-    ultimoPreco: preco,
-    criadoEm: new Date().toISOString()
-  });
-  document.getElementById('novoProdutoNome').value = '';
-  document.getElementById('novoProdutoPreco').value = '';
-  document.getElementById('novoProdutoNome').focus();
-};
-
-window.__excluirProduto = async function(id, nome) {
-  if (!confirm(`Excluir produto "${nome}"?`)) return;
-  await deleteDoc(doc(db, COL_PRODUTOS, id));
-};
-
-// ===== DEFINIR PREÇO (no mercado) =====
-async function definirPreco(id, preco) {
-  if (!preco || preco <= 0) { alert('Digite um preço válido.'); return; }
-  const item = itens.find(i => i.id === id);
-  await updateDoc(doc(db, COL_ITENS, id), {
-    preco: Number(preco),
-    data: new Date().toISOString()
-  });
-  // Atualiza catálogo de produtos (último preço) — se produto existir
-  if (item) {
-    const k = item.nome.toLowerCase().trim();
-    const prod = produtos.find(p => p.nome.toLowerCase().trim() === k);
-    if (prod) {
-      await updateDoc(doc(db, COL_PRODUTOS, prod.id), { ultimoPreco: Number(preco) });
-    } else {
-      // cria produto automaticamente
-      await addDoc(collection(db, COL_PRODUTOS), {
-        nome: item.nome,
-        ultimoPreco: Number(preco),
-        criadoEm: new Date().toISOString()
-      });
-    }
+    setStatus('✅ PIX adicionado', 'ok');
+  } catch (e) {
+    alert('Erro: ' + e.message);
   }
-  editorAberto = null;
 }
 
-// ===== AÇÕES =====
-async function toggle(id, novoComprado) {
-  await updateDoc(doc(db, COL_ITENS, id), { comprado: novoComprado });
-}
-async function excluir(id) {
-  if (!confirm('Excluir este item?')) return;
-  await deleteDoc(doc(db, COL_ITENS, id));
-}
-async function limparComprados() {
-  const comprados = itens.filter(i => i.comprado);
-  if (!comprados.length) return;
-  if (!confirm(`Excluir ${comprados.length} item(ns) comprado(s)?`)) return;
-  await Promise.all(comprados.map(i => deleteDoc(doc(db, COL_ITENS, i.id))));
-}
-function abrirEditor(id) { editorAberto = (editorAberto === id) ? null : id; renderizar(); }
-function fecharEditor() { editorAberto = null; renderizar(); }
-async function salvarPreco(id) {
-  const inp = document.getElementById('preco-' + id);
-  const v = parseFloat(inp.value);
-  if (!v || v <= 0) { alert('Digite um preço válido.'); inp.focus(); return; }
-  await definirPreco(id, v);
+async function moverItem(id, concluido) {
+  try {
+    await updateDoc(doc(db, COL_PIX, id), { concluido });
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
 }
 
-// ===== FIRESTORE =====
+async function excluirItem(id) {
+  if (!confirm('Excluir este registro?')) return;
+  try {
+    await deleteDoc(doc(db, COL_PIX, id));
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
+}
+
+// ===== MODAL =====
+function abrirModal(id) {
+  const item = pix.find(p => p.id === id);
+  if (!item) return;
+  editandoId = id;
+  document.getElementById('editFornecedor').value = item.fornecedor || '';
+  document.getElementById('editValor').value = item.valor || '';
+  document.getElementById('editDesc').value = item.descricao || '';
+  document.getElementById('editData').value = item.data || '';
+  document.getElementById('modalFundo').classList.add('aberto');
+  setTimeout(() => document.getElementById('editFornecedor').focus(), 50);
+}
+
+function fecharModal() {
+  document.getElementById('modalFundo').classList.remove('aberto');
+  editandoId = null;
+}
+
+async function salvarEdicao() {
+  const fornecedor = document.getElementById('editFornecedor').value.trim();
+  const valor = parseFloat(document.getElementById('editValor').value);
+  const descricao = document.getElementById('editDesc').value.trim();
+  const data = document.getElementById('editData').value;
+
+  if (!fornecedor || !valor || valor <= 0) {
+    alert('Preencha Fornecedor e Valor (maior que zero).');
+    return;
+  }
+
+  try {
+    await updateDoc(doc(db, COL_PIX, editandoId), {
+      fornecedor, valor, descricao,
+      data: data || new Date().toISOString().slice(0, 10)
+    });
+    fecharModal();
+    setStatus('✅ Registro atualizado', 'ok');
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
+}
+
+// fechar modal com ESC ou clique fora
+document.getElementById('modalFundo').addEventListener('click', (e) => {
+  if (e.target.id === 'modalFundo') fecharModal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && editandoId) fecharModal();
+});
+
+// ===== FIRESTORE: ESCUTA EM TEMPO REAL =====
 function escutar() {
   setStatus('🔄 Conectando...');
   let primeiro = true;
 
-  onSnapshot(collection(db, COL_ITENS), snap => {
-    itens = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    if (abaAtual === 'lista') renderizar();
-    if (abaAtual === 'nova') renderizarCatalogo();
-    if (abaAtual === 'produtos') renderizarProdutosCadastrados();
+  onSnapshot(collection(db, COL_EMPRESAS), snap => {
+    empresas = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (a.criadoEm || '').localeCompare(b.criadoEm || ''));
+
+    if (empresas.length > 0 && !empresas.some(e => e.id === empresaAtualId)) {
+      empresaAtualId = empresas[0].id;
+    }
+    renderTudo();
     if (primeiro) { setStatus('✅ Conectado', 'ok'); primeiro = false; }
   }, err => setStatus('❌ ' + err.message, 'erro'));
 
-  onSnapshot(collection(db, COL_PRODUTOS), snap => {
-    produtos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    if (abaAtual === 'nova') renderizarCatalogo();
-    if (abaAtual === 'produtos') renderizarProdutosCadastrados();
+  onSnapshot(collection(db, COL_PIX), snap => {
+    pix = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderTudo();
   }, err => console.error(err));
 }
 
-// ===== EXPOR =====
-window.__toggle = toggle;
-window.__excluir = excluir;
-window.__abrirEditor = abrirEditor;
-window.__fecharEditor = fecharEditor;
-window.__salvarPreco = salvarPreco;
-window.limparComprados = limparComprados;
+// ===== EXPOR PRA onclick =====
+window.adicionarPix = adicionarPix;
+window.moverItem = moverItem;
+window.excluirItem = excluirItem;
+window.abrirModal = abrirModal;
+window.fecharModal = fecharModal;
+window.salvarEdicao = salvarEdicao;
 
 // ===== START =====
+document.getElementById('inpData').value = new Date().toISOString().slice(0, 10);
 escutar();
-mudarAba('lista');
 </script>
 </body>
 </html>
